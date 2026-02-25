@@ -132,11 +132,18 @@ function round3(v) {
 
 // String helpers
 function safeSetBackground(url){
-  try{
-    screenEl.style.backgroundImage = `url("${url}")`;
-  }catch{
+  if(!url){
     screenEl.style.backgroundImage = '';
+    return;
   }
+  // preload to detect load failures
+  const img = new Image();
+  img.onload = () => { screenEl.style.backgroundImage = `url("${url}")`; };
+  img.onerror = () => {
+    console.warn('Background image failed to load:', url);
+    screenEl.style.backgroundImage = '';
+  };
+  img.src = url;
 }
 
 function clearHotspots(){
@@ -950,6 +957,7 @@ async function startAdsLoop(){
 
 function init(){
   safeSetBackground(ASSETS.idle);
+  videoEl.style.display = 'none';
   videoEl.addEventListener('error', () => { console.warn('video error'); videoEl.style.display='none'; });
   // initial load and ads
   (async () => {
