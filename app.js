@@ -34,26 +34,26 @@ const SCREENS = {
   menu: {
     bg: ASSETS.menu,
     hotspots: [
-      { id: "menu1", x: 0.531, y: 0.282, w: 0.35, h: 0.107, go: "floors", label: "Menu 1" },
-      { id: "menu2", x: 0.532, y: 0.465, w: 0.366, h: 0.099, go: "floors", label: "Menu 2" },
-      { id: "menu3", x: 0.533, y: 0.615, w: 0.365, h: 0.108, go: "floors", label: "Menu 3" },
-      { id: "menu4", x: 0.532, y: 0.781, w: 0.375, h: 0.115, go: "floors", label: "Menu 4" }
+      { id: "menu1", x: 0.301, y: 0.382, w: 0.35, h: 0.107, go: "floors", label: "Menu 1" },
+      { id: "menu2", x: 0.734, y: 0.384, w: 0.366, h: 0.099, go: "floors", label: "Menu 2" },
+      { id: "menu3", x: 0.296, y: 0.659, w: 0.365, h: 0.108, go: "floors", label: "Menu 3" },
+      { id: "menu4", x: 0.732, y: 0.656, w: 0.365, h: 0.108, go: "floors", label: "Menu 4" }
     ],
     pulses: []
   },
   floors: {
     bg: ASSETS.floors,
     hotspots: [
-      { id: "back_to_menu", x: 0.527, y: 0.627, w: 0.372, h: 0.101, go: "menu", label: "Back" },
-      { id: "to_map1", x: 0.535, y: 0.627, w: 0.372, h: 0.101, go: "map1", label: "Map 1" }
+      { id: "back_to_menu", x: 0.532, y: 0.779, w: 0.372, h: 0.101, go: "menu", label: "Back" },
+      { id: "to_map1", x: 0.532, y: 0.618, w: 0.372, h: 0.101, go: "map1", label: "Map 1" }
     ],
     pulses: []
   },
   map1: {
     bg: ASSETS.map1,
     hotspots: [
-      { id: "back_to_floors", x: 0.164, y: 0.046, w: 0.225, h: 0.059, go: "floors", label: "Back" },
-      { id: "to_tech_map", x: 0.791, y: 0.046, w: 0.236, h: 0.061, go: "tech_map1", label: "Tech" }
+      { id: "back_to_floors", x: 0.173, y: 0.081, w: 0.241, h: 0.006, go: "floors", label: "Back" },
+      { id: "to_tech_map", x: 0.817, y: 0.159, w: 0.236, h: 0.061, go: "tech_map1", label: "Tech" }
     ],
     pulses: [
       { id: "you_are_here", x: 0.415, y: 0.538 }
@@ -62,7 +62,7 @@ const SCREENS = {
   tech_map1: {
     bg: ASSETS.tech_map1,
     hotspots: [
-      { id: "back_to_map1", x: 0.819, y: 0.061, w: 0.356, h: 0.072, go: "map1", label: "Back" },
+      { id: "back_to_map1", x: 0.815, y: 0.007, w: 0.356, h: 0.072, go: "map1", label: "Back" },
       { id: "elkjop", x: 0.27, y: 0.45, w: 0.08, h: 0.08, label: "Elkjøp" },
       { id: "telia", x: 0.41, y: 0.37, w: 0.08, h: 0.08, label: "Telia" },
       { id: "telenor", x: 0.69, y: 0.64, w: 0.08, h: 0.08, label: "Telenor" }
