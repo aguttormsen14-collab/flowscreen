@@ -28,7 +28,7 @@ const SCREENS = {
   menu: {
     bg: ASSETS.menu,
     hotspots: [
-      { id: "menu1", x: 0.20, y: 0.70, w: 0.18, h: 0.12, go: "floors", label: "Menu 1" },
+      { id: "menu1", x: 0.531, y: 0.282, w: 0.35, h: 0.107, go: "floors", label: "Menu 1" },
       { id: "menu2", x: 0.40, y: 0.70, w: 0.18, h: 0.12, go: "floors", label: "Menu 2" },
       { id: "menu3", x: 0.60, y: 0.70, w: 0.18, h: 0.12, go: "floors", label: "Menu 3" },
       { id: "menu4", x: 0.80, y: 0.70, w: 0.18, h: 0.12, go: "floors", label: "Menu 4" }
@@ -50,21 +50,21 @@ const SCREENS = {
       { id: "to_tech_map", x: 0.80, y: 0.70, w: 0.12, h: 0.12, go: "tech_map1", label: "Tech" }
     ],
     pulses: [
-      { id: "you_are_here", x: 0.50, y: 0.62 }
+      { id: "you_are_here", x: 0.416, y: 0.544 }
     ]
   },
   tech_map1: {
     bg: ASSETS.tech_map1,
     hotspots: [
-      { id: "back_to_map1", x: 0.90, y: 0.10, w: 0.10, h: 0.08, go: "map1", label: "Back" },
+      { id: "back_to_map1", x: 0.819, y: 0.061, w: 0.356, h: 0.072, go: "map1", label: "Back" },
       { id: "elkjop", x: 0.27, y: 0.45, w: 0.08, h: 0.08, label: "Elkjøp" },
       { id: "telia", x: 0.41, y: 0.37, w: 0.08, h: 0.08, label: "Telia" },
       { id: "telenor", x: 0.69, y: 0.64, w: 0.08, h: 0.08, label: "Telenor" }
     ],
     pulses: [
-      { id: "elkjop", x: 0.27, y: 0.45 },
-      { id: "telia", x: 0.41, y: 0.37 },
-      { id: "telenor", x: 0.69, y: 0.64 }
+      { id: "elkjop", x: 0.206, y: 0.303 },
+      { id: "telia", x: 0.305, y: 0.224 },
+      { id: "telenor", x: 0.52, y: 0.516 }
     ]
   }
 };
