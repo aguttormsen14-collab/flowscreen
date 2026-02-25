@@ -4,20 +4,29 @@
 let DEBUG = false; // runtime-toggleable debug flag
 let editMode = false; // true while ArrowDown is held
 
+// Install loader (select which install's assets to use)
+const params = new URLSearchParams(location.search);
+const INSTALL_ID = params.get("install") || "amfi-steinkjer";
+
+const BASE_ASSETS = `installs/${INSTALL_ID}/assets`;
+const SCREEN_ASSETS = `${BASE_ASSETS}/screens`;
+const ADS_ASSETS = `${BASE_ASSETS}/ads`;
+const STORES_ASSETS = `${BASE_ASSETS}/stores`;
+
 // Ordered list of screens for left/right navigation
 const SCREEN_ORDER = ["idle","menu","floors","map1","map2","map3","tech_map1"];
 
 const ASSETS = {
-  idle: "assets/idle.png",
-  menu: "assets/menu.png",
-  floors: "assets/floors.png",
-  map1: "assets/map1.png",
-  map2: "assets/map2.png",
-  map3: "assets/map3.png",
-  tech_map1: "assets/tech_map1.png",
+  idle: `${SCREEN_ASSETS}/idle.png`,
+  menu: `${SCREEN_ASSETS}/menu.png`,
+  floors: `${SCREEN_ASSETS}/floors.png`,
+  map1: `${SCREEN_ASSETS}/map1.png`,
+  map2: `${SCREEN_ASSETS}/map2.png`,
+  map3: `${SCREEN_ASSETS}/map3.png`,
+  tech_map1: `${SCREEN_ASSETS}/tech_map1.png`,
 };
 
-const PLAYLIST_URL = "assets/ads/playlist.json";
+const PLAYLIST_URL = `${ADS_ASSETS}/playlist.json`;
 
 // === PLAYLIST POLLING ===
 const PLAYLIST_POLL_MS = 2 * 60 * 1000; // 2 minutes
@@ -28,9 +37,7 @@ let playlistPollTimer = null;
 const SCREENS = {
   idle: {
     bg: ASSETS.idle,
-    hotspots: [
-      { id: "to_menu", x: 0.5, y: 0.5, w: 1, h: 1, go: "menu" }
-    ],
+    hotspots: [ { id: "to_menu", x: 0.5, y: 0.5, w: 1, h: 1, go: "menu" } ],
     pulses: []
   },
   menu: {
@@ -48,9 +55,8 @@ const SCREENS = {
     hotspots: [
       { id: "back_to_menu", x: 0.532, y: 0.779, w: 0.372, h: 0.101, go: "menu" },
       { id: "to_map1", x: 0.532, y: 0.618, w: 0.372, h: 0.101, go: "map1" },
-      { id: "to_map2", x: 0.534, y: 0.437, w: 0.372, h: 0.101, go: "map2" },
-      { id: "to_map3", x: 0.537, y: 0.276, w: 0.372, h: 0.101, go: "map3" }
-      { id: "back_to_menu", x: 0.168, y: 0.098, w: 0.235, h: 0.048, go: "menu" }
+      { id: "to_map2", x: 0.532, y: 0.470, w: 0.372, h: 0.101, go: "map2" },
+      { id: "to_map3", x: 0.532, y: 0.322, w: 0.372, h: 0.101, go: "map3" }
     ],
     pulses: []
   },
@@ -60,9 +66,7 @@ const SCREENS = {
       { id: "back_to_floors", x: 0.173, y: 0.081, w: 0.241, h: 0.006, go: "floors", label: "Back" },
       { id: "to_tech_map", x: 0.817, y: 0.159, w: 0.236, h: 0.061, go: "tech_map1", label: "Tech" }
     ],
-    pulses: [
-      { id: "you_are_here", x: 0.415, y: 0.538 }
-    ]
+    pulses: [ { id: "you_are_here", x: 0.415, y: 0.538 } ]
   },
   tech_map1: {
     bg: ASSETS.tech_map1,
@@ -81,7 +85,7 @@ const SCREENS = {
   map2: {
     bg: ASSETS.map2,
     hotspots: [
-      { id:"back_to_menu", x:0.265, y:0.059, w:0.243, h:0.067, go:"menu" },
+      { id:"to_map1", x:0.92, y:0.12, w:0.07, h:0.06, go:"map1" },
       { id:"to_map3", x:0.92, y:0.20, w:0.07, h:0.06, go:"map3" }
     ],
     pulses: []
@@ -89,7 +93,7 @@ const SCREENS = {
   map3: {
     bg: ASSETS.map3,
     hotspots: [
-      { id:"back_to_menu", x:0.265, y:0.059, w:0.243, h:0.067, go:"menu" },
+      { id:"to_map1", x:0.92, y:0.12, w:0.07, h:0.06, go:"map1" },
       { id:"to_map2", x:0.92, y:0.20, w:0.07, h:0.06, go:"map2" }
     ],
     pulses: []
@@ -270,6 +274,7 @@ function setScreen(screenName) {
       ev.preventDefault();
       resetIdleTimer();
       if (h.go) setScreen(h.go);
+      else if (h.storeId) openStorePopup(h.storeId);
     });
 
     hotspotsEl.appendChild(btn);
@@ -562,6 +567,61 @@ function logPulsesForScreen(screenName) {
   }
 }
 
+// --- Store popup / modal ---
+function escapeHtml(str){
+  if(!str) return '';
+  return String(str).replace(/[&<>"']/g, (s)=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"
+  }[s]));
+}
+
+async function openStorePopup(storeId){
+  try{
+    const url = `${STORES_ASSETS}/${storeId}/info.json`;
+    const r = await fetch(url, {cache:'no-store'});
+    if(!r.ok) throw new Error('no store');
+    const info = await r.json();
+
+    // build content
+    const body = document.getElementById('storeBody');
+    const modal = document.getElementById('storeModal');
+    if(!body || !modal){ console.warn('store modal missing'); return; }
+    body.innerHTML = '';
+
+    const h = document.createElement('h2'); h.textContent = info.name || 'Store'; body.appendChild(h);
+    const meta = document.createElement('div'); meta.style.opacity='0.9'; meta.style.marginBottom='8px';
+    meta.innerHTML = `<strong>Category:</strong> ${escapeHtml(info.category||'')} &nbsp; <strong>Floor:</strong> ${escapeHtml(info.floor||'')}`;
+    body.appendChild(meta);
+
+    if(info.hours) { const p=document.createElement('p'); p.textContent = `Hours: ${info.hours}`; body.appendChild(p); }
+    if(info.phone) { const p=document.createElement('p'); p.textContent = `Phone: ${info.phone}`; body.appendChild(p); }
+    if(info.website) { const a=document.createElement('a'); a.href = info.website; a.textContent = info.website; a.target='_blank'; body.appendChild(a); }
+    if(info.text) { const p=document.createElement('p'); p.textContent = info.text; body.appendChild(p); }
+
+    // first image
+    if(Array.isArray(info.images) && info.images.length>0){
+      const img = document.createElement('img');
+      img.src = `${STORES_ASSETS}/${storeId}/${info.images[0]}`;
+      img.style.maxWidth='100%'; img.style.display='block'; img.style.marginTop='12px';
+      body.appendChild(img);
+    }
+
+    modal.classList.remove('hidden');
+
+    // close handlers
+    const closeBtn = document.getElementById('storeClose');
+    if(closeBtn) closeBtn.onclick = closeStorePopup;
+    modal.onclick = (ev) => { if(ev.target === modal) closeStorePopup(); };
+  }catch(e){ console.warn('openStorePopup error', e); }
+}
+
+function closeStorePopup(){
+  const modal = document.getElementById('storeModal');
+  if(!modal) return;
+  modal.classList.add('hidden');
+  const body = document.getElementById('storeBody'); if(body) body.innerHTML='';
+}
+
 // === PLAYLIST POLLING ===
 function makePlaylistSignature(){
   try{
@@ -806,7 +866,7 @@ async function urlExists(url){
 
 async function resolveSlot(slot){
   for(const ext of TRY_EXT){
-    const url = `assets/ads/${slot}${ext}`;
+    const url = `${ADS_ASSETS}/${slot}${ext}`;
     try{
       const ok = await urlExists(url);
       if(ok){
