@@ -135,9 +135,13 @@ function setScreen(screenName) {
     btn.style.pointerEvents = 'auto';
     
     btn.addEventListener('pointerdown', (ev) => {
-      // Don't trigger if we're in debug mode and dragging
-      if (DEBUG && ev.target.dataset.debugMode) return;
-      
+      // When in DEBUG editMode, block navigation so editor can handle interactions
+      if (DEBUG && editMode) {
+        ev.stopPropagation();
+        ev.preventDefault();
+        return;
+      }
+
       ev.stopPropagation();
       ev.preventDefault();
       resetIdleTimer();
@@ -189,7 +193,8 @@ function renderDebugEditor(screenName) {
   // Create debug container
   debugContainer = document.createElement('div');
   debugContainer.className = 'debug-container';
-  debugContainer.style.pointerEvents = 'none';
+  // pointer-events depends on whether editMode is active
+  debugContainer.style.pointerEvents = (DEBUG && editMode) ? 'auto' : 'none';
   hotspotsEl.appendChild(debugContainer);
   
   // Render hotspot editors
@@ -430,6 +435,47 @@ function resetIdleTimer(){
 document.addEventListener('pointerdown', () => {
   resetIdleTimer();
 }, {passive:true});
+
+// Edit mode / keyboard navigation
+function updateDebugOverlayPointer(){
+  if(!debugContainer) return;
+  debugContainer.style.pointerEvents = (DEBUG && editMode) ? 'auto' : 'none';
+}
+
+function nextScreen(){
+  const idx = SCREEN_ORDER.indexOf(currentScreen);
+  const nextIdx = idx === -1 ? 0 : (idx + 1) % SCREEN_ORDER.length;
+  const next = SCREEN_ORDER[nextIdx];
+  if(SCREENS[next]) setScreen(next);
+  updateDebugOverlayPointer();
+}
+
+function prevScreen(){
+  const idx = SCREEN_ORDER.indexOf(currentScreen);
+  const prevIdx = idx === -1 ? 0 : (idx - 1 + SCREEN_ORDER.length) % SCREEN_ORDER.length;
+  const prev = SCREEN_ORDER[prevIdx];
+  if(SCREENS[prev]) setScreen(prev);
+  updateDebugOverlayPointer();
+}
+
+document.addEventListener('keydown', (e) => {
+  // ArrowDown holds editMode. Ignore autorepeat flips.
+  if(e.code === 'ArrowDown'){
+    if(!e.repeat && !editMode){ editMode = true; updateDebugOverlayPointer(); }
+    e.preventDefault();
+    return;
+  }
+  // Arrow navigation (single press)
+  if(e.code === 'ArrowRight' && !e.repeat){ nextScreen(); e.preventDefault(); return; }
+  if(e.code === 'ArrowLeft' && !e.repeat){ prevScreen(); e.preventDefault(); return; }
+}, {passive:false});
+
+document.addEventListener('keyup', (e) => {
+  if(e.code === 'ArrowDown'){
+    if(editMode){ editMode = false; updateDebugOverlayPointer(); }
+    e.preventDefault();
+  }
+}, {passive:false});
 
 // Playlist helpers
 async function loadPlaylist(){
