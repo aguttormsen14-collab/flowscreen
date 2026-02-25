@@ -1,6 +1,7 @@
 (() => {
 
-const DEBUG = true; // Set to true to enable drag & drop debug editor
+// === DEBUG TOGGLE ===
+let DEBUG = false; // runtime-toggleable debug flag
 let editMode = false; // true while ArrowDown is held
 
 // Ordered list of screens for left/right navigation
@@ -15,6 +16,11 @@ const ASSETS = {
 };
 
 const PLAYLIST_URL = "assets/ads/playlist.json";
+
+// === PLAYLIST POLLING ===
+const PLAYLIST_POLL_MS = 2 * 60 * 1000; // 2 minutes
+let lastPlaylistSig = "";
+let playlistPollTimer = null;
 
 // SCREENS Configuration with hotspots and pulses (normalized coordinates 0..1)
 const SCREENS = {
@@ -514,6 +520,131 @@ function logPulsesForScreen(screenName) {
   }
 }
 
+// === PLAYLIST POLLING ===
+function makePlaylistSignature(){
+  try{
+    return JSON.stringify({ duration: AD_DURATION_MS, slots: SLOT_NAMES, exts: TRY_EXT, ads: ADS });
+  }catch(e){ return ''+Date.now(); }
+}
+
+async function buildAdsListFromSlots(){
+  // wrapper around buildAds()
+  await buildAds();
+}
+
+async function pollPlaylistAndReloadAdsIfChanged(){
+  try{
+    await loadPlaylist();
+    await buildAdsListFromSlots();
+    const sig = makePlaylistSignature();
+    if(sig !== lastPlaylistSig){
+      console.log('Playlist changed');
+      lastPlaylistSig = sig;
+      if(currentScreen === 'idle'){
+        stopAds();
+        startAdsLoop();
+      }
+    }
+  }catch(e){ console.warn('poll error', e); }
+}
+
+// === ADMIN MODE ===
+let adminPanel = null;
+let adminPanelOpen = false;
+
+function toggleAdminPanel(){
+  if(adminPanelOpen) closeAdminPanel(); else openAdminPanel();
+}
+
+function openAdminPanel(){
+  if(adminPanelOpen) return;
+  adminPanelOpen = true;
+  if(!adminPanel){
+    adminPanel = document.createElement('div');
+    adminPanel.id = 'adminPanel';
+    adminPanel.style.position = 'fixed';
+    adminPanel.style.top = '10px';
+    adminPanel.style.right = '10px';
+    adminPanel.style.width = '320px';
+    adminPanel.style.maxWidth = '90%';
+    adminPanel.style.background = 'rgba(0,0,0,0.85)';
+    adminPanel.style.color = 'white';
+    adminPanel.style.zIndex = '1000';
+    adminPanel.style.padding = '12px';
+    adminPanel.style.border = '1px solid rgba(255,255,255,0.08)';
+    adminPanel.style.fontFamily = 'sans-serif';
+
+    // Toggle Debug
+    const btnDebug = document.createElement('button');
+    btnDebug.textContent = 'Toggle Debug';
+    btnDebug.style.width = '100%'; btnDebug.style.marginBottom = '8px';
+    btnDebug.addEventListener('click', ()=>{ setDebugMode(!DEBUG); updateAdminStatus(); });
+    adminPanel.appendChild(btnDebug);
+
+    // Restart Ads
+    const btnRestartAds = document.createElement('button');
+    btnRestartAds.textContent = 'Restart Ads';
+    btnRestartAds.style.width = '100%'; btnRestartAds.style.marginBottom = '8px';
+    btnRestartAds.addEventListener('click', ()=>{ stopAds(); startAdsLoop(); updateAdminStatus(); });
+    adminPanel.appendChild(btnRestartAds);
+
+    // Go Idle
+    const btnIdle = document.createElement('button');
+    btnIdle.textContent = 'Go Idle';
+    btnIdle.style.width = '100%'; btnIdle.style.marginBottom = '8px';
+    btnIdle.addEventListener('click', ()=>{ setScreen('idle'); updateAdminStatus(); });
+    adminPanel.appendChild(btnIdle);
+
+    // Screen selector
+    const sel = document.createElement('select');
+    sel.style.width = '100%'; sel.style.marginBottom = '8px';
+    SCREEN_ORDER.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
+    sel.addEventListener('change', ()=>{ setScreen(sel.value); updateAdminStatus(); });
+    adminPanel.appendChild(sel);
+
+    // Reload Campaign
+    const btnReload = document.createElement('button');
+    btnReload.textContent = 'Reload Campaign';
+    btnReload.style.width = '100%'; btnReload.style.marginBottom = '8px';
+    btnReload.addEventListener('click', ()=>{ pollPlaylistAndReloadAdsIfChanged(); updateAdminStatus(); });
+    adminPanel.appendChild(btnReload);
+
+    // Status
+    const status = document.createElement('pre');
+    status.id = 'adminStatus';
+    status.style.whiteSpace = 'pre-wrap';
+    status.style.fontSize = '12px';
+    status.style.margin = '0';
+    status.style.background = 'transparent';
+    status.style.color = '#9ef';
+    status.style.padding = '6px 0 0 0';
+    adminPanel.appendChild(status);
+
+    // Close hint
+    const hint = document.createElement('div');
+    hint.style.fontSize = '11px'; hint.style.opacity = '0.8'; hint.style.marginTop = '8px';
+    hint.textContent = 'Hold SHIFT+D for 2s to open/close admin panel';
+    adminPanel.appendChild(hint);
+  }
+
+  document.body.appendChild(adminPanel);
+  updateAdminStatus();
+}
+
+function closeAdminPanel(){
+  if(!adminPanelOpen) return;
+  adminPanelOpen = false;
+  if(adminPanel && adminPanel.parentElement) adminPanel.parentElement.removeChild(adminPanel);
+}
+
+function updateAdminStatus(){
+  if(!adminPanel) return;
+  const st = adminPanel.querySelector('#adminStatus');
+  if(!st) return;
+  const info = `screen: ${currentScreen}\nDEBUG: ${DEBUG}\nADS: ${ADS.length}`;
+  st.textContent = info;
+}
+
 
 
 function resetIdleTimer(){
@@ -567,6 +698,42 @@ document.addEventListener('keyup', (e) => {
     e.preventDefault();
   }
 }, {passive:false});
+
+// === DEBUG TOGGLE ===
+function setDebugMode(enabled){
+  DEBUG = !!enabled;
+  console.log('DEBUG:', DEBUG ? 'ON' : 'OFF');
+  if(DEBUG){
+    if(currentScreen) renderDebugEditor(currentScreen);
+  } else {
+    clearDebugEditor();
+  }
+}
+
+// Toggle via KeyD (ignore when input/textarea focused)
+let adminHoldTimer = null; // used by admin open (Shift+D hold)
+document.addEventListener('keydown', (e) => {
+  const tag = document.activeElement && document.activeElement.tagName;
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || (document.activeElement && document.activeElement.isContentEditable)) return;
+
+  // Admin panel open: hold SHIFT + D for 2s
+  if(e.code === 'KeyD' && e.shiftKey && !adminHoldTimer){
+    adminHoldTimer = setTimeout(() => { toggleAdminPanel(); adminHoldTimer = null; }, 2000);
+    return;
+  }
+
+  // Toggle debug with plain D (no shift)
+  if(e.code === 'KeyD' && !e.shiftKey && !e.repeat){
+    setDebugMode(!DEBUG);
+    return;
+  }
+}, {passive:true});
+
+document.addEventListener('keyup', (e) => {
+  if(e.code === 'KeyD'){
+    if(adminHoldTimer){ clearTimeout(adminHoldTimer); adminHoldTimer = null; }
+  }
+}, {passive:true});
 
 // Playlist helpers
 async function loadPlaylist(){
@@ -681,10 +848,24 @@ async function startAdsLoop(){
 function init(){
   safeSetBackground(ASSETS.idle);
   videoEl.addEventListener('error', () => { console.warn('video error'); videoEl.style.display='none'; });
-  loadPlaylist().then(()=>{
-    setScreen('idle');
-    startAdsLoop();
-  });
+  // initial load and ads
+  (async () => {
+    try{
+      await loadPlaylist();
+      await buildAdsListFromSlots();
+      lastPlaylistSig = makePlaylistSignature();
+      setScreen('idle');
+      startAdsLoop();
+      // start playlist polling
+      if(playlistPollTimer) clearInterval(playlistPollTimer);
+      playlistPollTimer = setInterval(pollPlaylistAndReloadAdsIfChanged, PLAYLIST_POLL_MS);
+    }catch(e){
+      console.warn('init error', e);
+      // fallback
+      setScreen('idle');
+      startAdsLoop();
+    }
+  })();
   resetIdleTimer();
 }
 
@@ -692,9 +873,8 @@ function init(){
 window.__kiosk = {
   setScreen,
   SCREENS,
-  DEBUG: () => window.__kiosk.DEBUG_ON(),
-  DEBUG_ON: () => { window.__kiosk._DEBUG = true; renderDebugEditor(currentScreen || 'idle'); },
-  DEBUG_OFF: () => { window.__kiosk._DEBUG = false; clearDebugEditor(); }
+  setDebugMode,
+  openAdmin: () => { toggleAdminPanel(); }
 };
 
 document.addEventListener('DOMContentLoaded', init);
