@@ -47,6 +47,7 @@ const SCREENS = {
       { id: "menu2", x: 0.734, y: 0.384, w: 0.366, h: 0.099, go: "floors", label: "Menu 2" },
       { id: "menu3", x: 0.296, y: 0.659, w: 0.365, h: 0.108, go: "floors", label: "Menu 3" },
       { id: "menu4", x: 0.732, y: 0.656, w: 0.365, h: 0.108, go: "floors", label: "Menu 4" }
+      { id: "back_to_idle", x: 0.125, y: 0.06, w: 0.237, h: 0.067, go: "idle", label: "Back to Idle" }
     ],
     pulses: []
   },
@@ -55,15 +56,17 @@ const SCREENS = {
     hotspots: [
       { id: "back_to_menu", x: 0.532, y: 0.779, w: 0.372, h: 0.101, go: "menu" },
       { id: "to_map1", x: 0.532, y: 0.618, w: 0.372, h: 0.101, go: "map1" },
-      { id: "to_map2", x: 0.532, y: 0.470, w: 0.372, h: 0.101, go: "map2" },
-      { id: "to_map3", x: 0.532, y: 0.322, w: 0.372, h: 0.101, go: "map3" }
+      { id: "to_map2", x: 0.534, y: 0.437, w: 0.372, h: 0.101, go: "map2" },
+      { id: "to_map3", x: 0.536, y: 0.28, w: 0.372, h: 0.101, go: "map3" }
+      { id: "to_map3", x: 0.536, y: 0.28, w: 0.372, h: 0.101, go: "map3" }
+      { id: "back_to_menu", x: 0.168, y: 0.098, w: 0.243, h: 0.074, go: "menu" }
     ],
     pulses: []
   },
   map1: {
     bg: ASSETS.map1,
     hotspots: [
-      { id: "back_to_floors", x: 0.173, y: 0.081, w: 0.241, h: 0.006, go: "floors", label: "Back" },
+      { id: "back_to_floors", x: 0.173, y: 0.081, w: 0.236, h: 0.083, go: "floors", label: "Back" },
       { id: "to_tech_map", x: 0.817, y: 0.159, w: 0.236, h: 0.061, go: "tech_map1", label: "Tech" }
     ],
     pulses: [ { id: "you_are_here", x: 0.415, y: 0.538 } ]
@@ -85,7 +88,7 @@ const SCREENS = {
   map2: {
     bg: ASSETS.map2,
     hotspots: [
-      { id:"to_map1", x:0.92, y:0.12, w:0.07, h:0.06, go:"map1" },
+      { id:"to_map1", x:0.261, y:0.64, w:0.242, h:0.084, go:"menu" },
       { id:"to_map3", x:0.92, y:0.20, w:0.07, h:0.06, go:"map3" }
     ],
     pulses: []
@@ -93,7 +96,7 @@ const SCREENS = {
   map3: {
     bg: ASSETS.map3,
     hotspots: [
-      { id:"to_map1", x:0.92, y:0.12, w:0.07, h:0.06, go:"map1" },
+      { id:"to_map1", x:0.704, y:0.053, w:0.224, h:0.069, go:"menu" },
       { id:"to_map2", x:0.92, y:0.20, w:0.07, h:0.06, go:"map2" }
     ],
     pulses: []
