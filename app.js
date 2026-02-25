@@ -1,5 +1,7 @@
 (() => {
 
+const DEBUG = true; // Set to true to see hotspot outlines, labels, and pulse crosses
+
 const ASSETS = {
   idle: "assets/idle.png",
   menu: "assets/menu.png",
@@ -9,6 +11,18 @@ const ASSETS = {
 };
 
 const PLAYLIST_URL = "assets/ads/playlist.json";
+
+// Pulse marker definitions (normalized coordinates 0..1)
+const PULSE_MARKERS = {
+  map1: [
+    { x: 0.50, y: 0.62, label: "DU ER HER" }
+  ],
+  tech_map1: [
+    { x: 0.27, y: 0.45, label: "Elkjøp" },
+    { x: 0.41, y: 0.37, label: "Telia" },
+    { x: 0.69, y: 0.64, label: "Telenor" }
+  ]
+};
 
 let SLOT_NAMES = ["slot1","slot2","slot3"];
 let TRY_EXT = [".mp4",".jpg",".jpeg",".png",".webm",".mov"];
@@ -54,6 +68,16 @@ function createHotspot(opts){
     if(opts.width) el.style.width = opts.width;
     if(opts.height) el.style.height = opts.height;
     el.style.transform = 'translate(-50%, -50%)';
+  }
+  // Debug: add outline and label
+  if(DEBUG){
+    el.classList.add('debug');
+    const label = document.createElement('div');
+    label.className = 'hotspot-label';
+    label.textContent = opts.label || 'hotspot';
+    label.style.left = '0';
+    label.style.top = '0';
+    el.appendChild(label);
   }
   el.addEventListener('pointerdown', (ev) => {
     ev.stopPropagation();
@@ -192,6 +216,37 @@ async function startAdsLoop(){
   showAdByIndex(adIndex);
 }
 
+// Pulse drawing functions
+function drawPulses(pulseList){
+  // Clear existing pulses
+  const existingPulses = document.querySelectorAll('.pulse, .pulse-debug');
+  existingPulses.forEach(p => p.remove());
+  
+  // Draw each pulse marker
+  pulseList.forEach((marker, idx) => {
+    // Convert normalized coordinates (0..1) to percentages
+    const leftPercent = marker.x * 100;
+    const topPercent = marker.y * 100;
+    
+    // Create pulse animation element
+    const p = document.createElement('div');
+    p.className = 'pulse';
+    p.style.left = leftPercent + '%';
+    p.style.top = topPercent + '%';
+    hotspotsEl.appendChild(p);
+    
+    // Debug: draw cross at pulse center
+    if(DEBUG){
+      const cross = document.createElement('div');
+      cross.className = 'pulse-debug';
+      cross.title = marker.label || `Pulse ${idx+1}`;
+      cross.style.left = leftPercent + '%';
+      cross.style.top = topPercent + '%';
+      hotspotsEl.appendChild(cross);
+    }
+  });
+}
+
 // Navigation and screens
 function goIdle(){
   currentScreen = 'idle';
@@ -232,6 +287,10 @@ function goMap1(){
   safeSetBackground(ASSETS.map1);
   createHotspot({left: 90, top: 10, width: '10%', height: '8%', label: 'Back', onClick: ()=>{ goFloors(); }});
   createHotspot({left: 80, top: 70, width: '12%', height: '12%', label: 'Tech', onClick: ()=>{ goTechMap1(); }});
+  // Draw pulses for map1
+  if(PULSE_MARKERS.map1){
+    drawPulses(PULSE_MARKERS.map1);
+  }
 }
 
 function goTechMap1(){
@@ -240,19 +299,25 @@ function goTechMap1(){
   stopAds();
   safeSetBackground(ASSETS.tech_map1);
   createHotspot({left: 90, top: 10, width: '10%', height: '8%', label: 'Back', onClick: ()=>{ goMap1(); }});
-  // three store hotspots
-  const shops = [ {left: 30, top: 45}, {left: 50, top: 55}, {left: 70, top: 40} ];
-  shops.forEach((s, i)=>{
-    createHotspot({left: s.left, top: s.top, width: '8%', height: '8%', label: `Shop ${i+1}`, onClick: ()=>{ /* placeholder action */ alert(`Shop ${i+1}`); }});
-  });
-  // add three pulse visuals at same fixed points
-  shops.forEach((s)=>{
-    const p = document.createElement('div');
-    p.className = 'pulse';
-    p.style.left = s.left + '%';
-    p.style.top = s.top + '%';
-    hotspotsEl.appendChild(p);
-  });
+  
+  // Create clickable hotspots at normalized marker positions (converted to percentages)
+  if(PULSE_MARKERS.tech_map1){
+    PULSE_MARKERS.tech_map1.forEach((marker, i) => {
+      createHotspot({
+        left: marker.x * 100,
+        top: marker.y * 100,
+        width: '8%',
+        height: '8%',
+        label: marker.label || `Shop ${i+1}`,
+        onClick: ()=>{ alert(marker.label || `Shop ${i+1}`); }
+      });
+    });
+  }
+  
+  // Draw pulses for tech_map1
+  if(PULSE_MARKERS.tech_map1){
+    drawPulses(PULSE_MARKERS.tech_map1);
+  }
 }
 
 // start app

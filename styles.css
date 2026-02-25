@@ -15,6 +15,7 @@ html, body {
   inset: 0;
   background: black center / cover no-repeat;
   z-index: 0;
+  pointer-events: none;
 }
 
 #video {
@@ -25,6 +26,7 @@ html, body {
   object-fit: contain;
   display: none;
   z-index: 1;
+  pointer-events: none;
 }
 
 #hotspots {
@@ -39,6 +41,49 @@ html, body {
   pointer-events: auto;
   background: transparent;
   border: none;
+}
+
+.hotspot.debug {
+  outline: 2px solid lime;
+}
+
+.hotspot-label {
+  position: absolute;
+  font-size: 10px;
+  color: lime;
+  background: rgba(0,0,0,0.7);
+  padding: 1px 3px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.pulse-debug {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: cyan;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.pulse-debug::before,
+.pulse-debug::after {
+  content: "";
+  position: absolute;
+  background: cyan;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.pulse-debug::before {
+  width: 100%;
+  height: 2px;
+}
+
+.pulse-debug::after {
+  width: 2px;
+  height: 100%;
 }
 
 .hotspot.fullscreen {
