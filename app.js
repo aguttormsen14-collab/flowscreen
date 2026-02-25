@@ -5,7 +5,7 @@ let DEBUG = false; // runtime-toggleable debug flag
 let editMode = false; // true while ArrowDown is held
 
 // Ordered list of screens for left/right navigation
-const SCREEN_ORDER = ["idle","menu","floors","map1","tech_map1"];
+const SCREEN_ORDER = ["idle","menu","floors","map1","map2","map3","tech_map1"];
 
 const ASSETS = {
   idle: "assets/idle.png",
@@ -44,18 +44,13 @@ const SCREENS = {
     pulses: []
   },
   floors: {
-  bg: ASSETS.floors,
-  hotspots: [
-    { id: "back_to_menu", x: 0.532, y: 0.779, w: 0.372, h: 0.101, go: "menu" },
-
-    { id: "to_map1", x: 0.532, y: 0.618, w: 0.372, h: 0.101, go: "map1" },
-
-    { id: "to_map2", x: 0.532, y: 0.470, w: 0.372, h: 0.101, go: "map2" },
-
-    { id: "to_map3", x: 0.532, y: 0.322, w: 0.372, h: 0.101, go: "map3" }
-  ],
-  pulses: []
-},
+    bg: ASSETS.floors,
+    hotspots: [
+      { id: "back_to_menu", x: 0.532, y: 0.779, w: 0.372, h: 0.101, go: "menu" },
+      { id: "to_map1", x: 0.532, y: 0.618, w: 0.372, h: 0.101, go: "map1" },
+      { id: "to_map2", x: 0.532, y: 0.470, w: 0.372, h: 0.101, go: "map2" },
+      { id: "to_map3", x: 0.532, y: 0.322, w: 0.372, h: 0.101, go: "map3" }
+    ],
     pulses: []
   },
   map1: {
@@ -81,16 +76,23 @@ const SCREENS = {
       { id: "telia", x: 0.306, y: 0.258 },
       { id: "telenor", x: 0.52, y: 0.516 }
     ]
-    HOTSPOTS.map2 = [
-  { id:"to_map1", x:0.92, y:0.12, w:0.07, h:0.06, go:"map1" },
-  { id:"to_map3", x:0.92, y:0.20, w:0.07, h:0.06, go:"map3" },
-];
-
-HOTSPOTS.map3 = [
-  { id:"to_map1", x:0.92, y:0.12, w:0.07, h:0.06, go:"map1" },
-  { id:"to_map2", x:0.92, y:0.20, w:0.07, h:0.06, go:"map2" },
+  },
+  map2: {
+    bg: ASSETS.map2,
+    hotspots: [
+      { id:"to_map1", x:0.92, y:0.12, w:0.07, h:0.06, go:"map1" },
+      { id:"to_map3", x:0.92, y:0.20, w:0.07, h:0.06, go:"map3" }
+    ],
+    pulses: []
+  },
+  map3: {
+    bg: ASSETS.map3,
+    hotspots: [
+      { id:"to_map1", x:0.92, y:0.12, w:0.07, h:0.06, go:"map1" },
+      { id:"to_map2", x:0.92, y:0.20, w:0.07, h:0.06, go:"map2" }
+    ],
+    pulses: []
   }
-
 };
 
 let SLOT_NAMES = ["slot1","slot2","slot3"];
@@ -141,7 +143,13 @@ function safeSetBackground(url){
   img.onload = () => { screenEl.style.backgroundImage = `url("${url}")`; };
   img.onerror = () => {
     console.warn('Background image failed to load:', url);
-    screenEl.style.backgroundImage = '';
+    // fallback to idle image if possible
+    if(url !== ASSETS.idle){
+      console.warn('Falling back to idle background');
+      safeSetBackground(ASSETS.idle);
+    } else {
+      screenEl.style.backgroundImage = '';
+    }
   };
   img.src = url;
 }
