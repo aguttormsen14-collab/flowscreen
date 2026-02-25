@@ -76,7 +76,9 @@ const SCREENS = {
 };
 
 let SLOT_NAMES = ["slot1","slot2","slot3"];
-let TRY_EXT = [".mp4",".jpg",".jpeg",".png",".webm",".mov"];
+// === VIDEO PRIORITY & EXTENSIONS ===
+// prefer webm then mp4, then image types
+let TRY_EXT = [".webm",".mp4",".jpg",".jpeg",".png",".gif"];
 let AD_DURATION_MS = 8000;
 
 const IDLE_TIMEOUT_MS = 30000;
@@ -90,6 +92,12 @@ let ADS = [];
 let adIndex = 0;
 let adTimer = null;
 let adFallbackTimer = null;
+// === VIDEO FAILSAFE ===
+let videoWatchdogTimer = null;
+let videoMaxTimer = null;
+let videoStarted = false;
+let currentVideoHandlers = {};
+
 let idleTimer = null;
 let currentScreen = null;
 let currentDebugData = null; // Tracks debug state
@@ -768,8 +776,15 @@ async function resolveSlot(slot){
     try{
       const ok = await urlExists(url);
       if(ok){
-        const isVideo = ['.mp4','.webm','.mov'].includes(ext.toLowerCase());
-        return {src: url, isVideo};
+        const lower = ext.toLowerCase();
+        const isVideo = ['.mp4','.webm','.mov'].includes(lower);
+        // map extension to mime
+        let mime = '';
+        if(lower === '.mp4') mime = 'video/mp4';
+        else if(lower === '.webm') mime = 'video/webm';
+        else if(lower === '.mov') mime = 'video/quicktime';
+        // return rich ad descriptor
+        return { src: url, isVideo, mime };
       }
     }catch(e){ /* ignore */ }
   }
@@ -787,9 +802,27 @@ async function buildAds(){
 function stopAds(){
   if(adTimer) { clearTimeout(adTimer); adTimer = null; }
   if(adFallbackTimer) { clearTimeout(adFallbackTimer); adFallbackTimer = null; }
+  // cleanup any running video handlers/timers
+  cleanupVideoPlayback();
   try{ videoEl.pause(); }catch{}
   videoEl.removeAttribute('src');
   videoEl.style.display = 'none';
+}
+
+function cleanupVideoPlayback(){
+  // === VIDEO FAILSAFE ===
+  try{
+    if(videoWatchdogTimer){ clearTimeout(videoWatchdogTimer); videoWatchdogTimer = null; }
+    if(videoMaxTimer){ clearTimeout(videoMaxTimer); videoMaxTimer = null; }
+    videoStarted = false;
+    // remove handlers
+    if(currentVideoHandlers.playing) videoEl.removeEventListener('playing', currentVideoHandlers.playing);
+    if(currentVideoHandlers.ended) videoEl.removeEventListener('ended', currentVideoHandlers.ended);
+    if(currentVideoHandlers.error) videoEl.removeEventListener('error', currentVideoHandlers.error);
+    if(currentVideoHandlers.stalled) videoEl.removeEventListener('stalled', currentVideoHandlers.stalled);
+    if(currentVideoHandlers.timeupdate) videoEl.removeEventListener('timeupdate', currentVideoHandlers.timeupdate);
+    currentVideoHandlers = {};
+  }catch(e){ /* ignore */ }
 }
 
 function nextAd(){
@@ -804,30 +837,82 @@ function showIdleBackground(){
   safeSetBackground(ASSETS.idle);
 }
 
+// === VIDEO FAILSAFE ===
 function showAdByIndex(i){
   if(!ADS.length) return showIdleBackground();
   const ad = ADS[i];
+
+  // cleanup any previous video playback state
+  cleanupVideoPlayback();
+
   if(ad.isVideo){
+    // check mime/canPlayType
+    const mime = ad.mime || 'video/mp4';
+    const can = videoEl.canPlayType ? videoEl.canPlayType(mime) : '';
+    if(!can){
+      console.warn('Video mime not supported, skipping:', mime, ad.src);
+      // try next ad
+      adTimer = setTimeout(nextAd, 200);
+      return;
+    }
+
+    // prepare video element
     videoEl.style.display = 'block';
+    videoEl.muted = true;
+    videoEl.playsInline = true;
+    videoEl.preload = 'auto';
     videoEl.src = ad.src;
     videoEl.load();
     safeSetBackground(ASSETS.idle);
+
+    // set up watchdogs
+    videoStarted = false;
+    // if video hasn't started playing within 4s -> skip
+    videoWatchdogTimer = setTimeout(()=>{
+      if(!videoStarted){
+        console.warn('Video watchdog: did not start, skipping ad', ad.src);
+        cleanupVideoPlayback();
+        nextAd();
+      }
+    }, 4000);
+    // hard max duration to avoid hang (30s)
+    videoMaxTimer = setTimeout(()=>{
+      console.warn('Video max timeout, skipping', ad.src);
+      cleanupVideoPlayback();
+      nextAd();
+    }, 30000);
+
+    // event handlers
+    currentVideoHandlers.playing = () => {
+      videoStarted = true;
+      if(videoWatchdogTimer){ clearTimeout(videoWatchdogTimer); videoWatchdogTimer = null; }
+      // ensure we still advance after AD_DURATION_MS from start
+      if(adFallbackTimer) clearTimeout(adFallbackTimer);
+      adFallbackTimer = setTimeout(()=>{ cleanupVideoPlayback(); nextAd(); }, AD_DURATION_MS + 2000);
+    };
+    currentVideoHandlers.ended = () => { cleanupVideoPlayback(); nextAd(); };
+    currentVideoHandlers.error = () => { console.warn('Video error, skipping', ad.src); cleanupVideoPlayback(); nextAd(); };
+    currentVideoHandlers.stalled = () => { console.warn('Video stalled, skipping', ad.src); cleanupVideoPlayback(); nextAd(); };
+
+    videoEl.addEventListener('playing', currentVideoHandlers.playing);
+    videoEl.addEventListener('ended', currentVideoHandlers.ended);
+    videoEl.addEventListener('error', currentVideoHandlers.error);
+    videoEl.addEventListener('stalled', currentVideoHandlers.stalled);
+
+    // attempt play and handle promise rejection
     const playPromise = videoEl.play();
     if(playPromise && typeof playPromise.then === 'function'){
       playPromise.then(()=>{
-        if(adFallbackTimer) clearTimeout(adFallbackTimer);
-        adFallbackTimer = setTimeout(()=>{ nextAd(); }, AD_DURATION_MS + 2000);
+        // play started; handlers will manage progression
       }).catch((e)=>{
-        console.warn('Autoplay failed, skipping video ad', e);
-        videoEl.style.display = 'none';
-        adTimer = setTimeout(nextAd, AD_DURATION_MS);
+        console.warn('play() promise rejected, skipping ad', e);
+        // small delay then skip
+        setTimeout(()=>{ cleanupVideoPlayback(); nextAd(); }, 500);
       });
-    } else {
-      adFallbackTimer = setTimeout(()=>{ nextAd(); }, AD_DURATION_MS + 2000);
     }
-    const onEnded = () => { videoEl.removeEventListener('ended', onEnded); nextAd(); };
-    videoEl.addEventListener('ended', onEnded);
   } else {
+    // image ad - display as background
+    cleanupVideoPlayback();
     videoEl.style.display = 'none';
     safeSetBackground(ad.src);
     if(adTimer) clearTimeout(adTimer);
