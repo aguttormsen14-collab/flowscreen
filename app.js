@@ -1,6 +1,6 @@
 (() => {
 
-const DEBUG = true; // Set to true to see hotspot outlines, labels, and pulse crosses
+const DEBUG = true; // Set to true to enable drag & drop debug editor
 
 const ASSETS = {
   idle: "assets/idle.png",
@@ -12,25 +12,66 @@ const ASSETS = {
 
 const PLAYLIST_URL = "assets/ads/playlist.json";
 
-// Pulse marker definitions (normalized coordinates 0..1)
-const PULSE_MARKERS = {
-  map1: [
-    { x: 0.50, y: 0.62, label: "DU ER HER" }
-  ],
-  tech_map1: [
-    { x: 0.27, y: 0.45, label: "Elkjøp" },
-    { x: 0.41, y: 0.37, label: "Telia" },
-    { x: 0.69, y: 0.64, label: "Telenor" }
-  ]
+// SCREENS Configuration with hotspots and pulses (normalized coordinates 0..1)
+const SCREENS = {
+  idle: {
+    bg: ASSETS.idle,
+    hotspots: [
+      { id: "to_menu", x: 0.5, y: 0.5, w: 1, h: 1, go: "menu" }
+    ],
+    pulses: []
+  },
+  menu: {
+    bg: ASSETS.menu,
+    hotspots: [
+      { id: "menu1", x: 0.20, y: 0.70, w: 0.18, h: 0.12, go: "floors", label: "Menu 1" },
+      { id: "menu2", x: 0.40, y: 0.70, w: 0.18, h: 0.12, go: "floors", label: "Menu 2" },
+      { id: "menu3", x: 0.60, y: 0.70, w: 0.18, h: 0.12, go: "floors", label: "Menu 3" },
+      { id: "menu4", x: 0.80, y: 0.70, w: 0.18, h: 0.12, go: "floors", label: "Menu 4" }
+    ],
+    pulses: []
+  },
+  floors: {
+    bg: ASSETS.floors,
+    hotspots: [
+      { id: "back_to_menu", x: 0.10, y: 0.10, w: 0.12, h: 0.08, go: "menu", label: "Back" },
+      { id: "to_map1", x: 0.50, y: 0.70, w: 0.25, h: 0.15, go: "map1", label: "Map 1" }
+    ],
+    pulses: []
+  },
+  map1: {
+    bg: ASSETS.map1,
+    hotspots: [
+      { id: "back_to_floors", x: 0.90, y: 0.10, w: 0.10, h: 0.08, go: "floors", label: "Back" },
+      { id: "to_tech_map", x: 0.80, y: 0.70, w: 0.12, h: 0.12, go: "tech_map1", label: "Tech" }
+    ],
+    pulses: [
+      { id: "you_are_here", x: 0.50, y: 0.62 }
+    ]
+  },
+  tech_map1: {
+    bg: ASSETS.tech_map1,
+    hotspots: [
+      { id: "back_to_map1", x: 0.90, y: 0.10, w: 0.10, h: 0.08, go: "map1", label: "Back" },
+      { id: "elkjop", x: 0.27, y: 0.45, w: 0.08, h: 0.08, label: "Elkjøp" },
+      { id: "telia", x: 0.41, y: 0.37, w: 0.08, h: 0.08, label: "Telia" },
+      { id: "telenor", x: 0.69, y: 0.64, w: 0.08, h: 0.08, label: "Telenor" }
+    ],
+    pulses: [
+      { id: "elkjop", x: 0.27, y: 0.45 },
+      { id: "telia", x: 0.41, y: 0.37 },
+      { id: "telenor", x: 0.69, y: 0.64 }
+    ]
+  }
 };
 
 let SLOT_NAMES = ["slot1","slot2","slot3"];
 let TRY_EXT = [".mp4",".jpg",".jpeg",".png",".webm",".mov"];
 let AD_DURATION_MS = 8000;
 
-const IDLE_TIMEOUT_MS = 30000; // X milliseconds of inactivity -> back to idle
+const IDLE_TIMEOUT_MS = 30000;
 
-// DOM refs (defined once)
+// DOM refs
 const screenEl = document.getElementById("screen");
 const videoEl = document.getElementById("video");
 const hotspotsEl = document.getElementById("hotspots");
@@ -41,8 +82,19 @@ let adTimer = null;
 let adFallbackTimer = null;
 let idleTimer = null;
 let currentScreen = null;
+let currentDebugData = null; // Tracks debug state
 
-// Helpers
+// Clamp value to [0,1]
+function clamp01(v) {
+  return Math.max(0, Math.min(1, v));
+}
+
+// Round to 3 decimals
+function round3(v) {
+  return Math.round(v * 1000) / 1000;
+}
+
+// String helpers
 function safeSetBackground(url){
   try{
     screenEl.style.backgroundImage = `url("${url}")`;
@@ -55,49 +107,323 @@ function clearHotspots(){
   while(hotspotsEl.firstChild) hotspotsEl.removeChild(hotspotsEl.firstChild);
 }
 
-function createHotspot(opts){
-  const el = document.createElement('button');
-  el.className = 'hotspot';
-  el.setAttribute('aria-label', opts.label || 'hotspot');
-  el.style.position = 'absolute';
-  if(opts.fullscreen){
-    el.classList.add('fullscreen');
-  } else {
-    if(typeof opts.left === 'number' || typeof opts.left === 'string') el.style.left = typeof opts.left === 'number' ? opts.left+'%' : opts.left;
-    if(typeof opts.top === 'number' || typeof opts.top === 'string') el.style.top = typeof opts.top === 'number' ? opts.top+'%' : opts.top;
-    if(opts.width) el.style.width = opts.width;
-    if(opts.height) el.style.height = opts.height;
-    el.style.transform = 'translate(-50%, -50%)';
-  }
-  // Debug: add outline and label
-  if(DEBUG){
-    el.classList.add('debug');
-    const label = document.createElement('div');
-    label.className = 'hotspot-label';
-    label.textContent = opts.label || 'hotspot';
-    label.style.left = '0';
-    label.style.top = '0';
-    el.appendChild(label);
-  }
-  el.addEventListener('pointerdown', (ev) => {
-    ev.stopPropagation();
-    ev.preventDefault();
-    resetIdleTimer();
-    try{ opts.onClick && opts.onClick(ev); }catch(e){ console.error(e); }
+// Render actual hotspots and pulses for the current screen
+function setScreen(screenName) {
+  if (!SCREENS[screenName]) return console.error("Unknown screen:", screenName);
+  currentScreen = screenName;
+  const config = SCREENS[screenName];
+  
+  clearHotspots();
+  stopAds();
+  safeSetBackground(config.bg);
+  
+  // Render hotspots
+  config.hotspots.forEach(h => {
+    const btn = document.createElement('button');
+    btn.className = 'hotspot';
+    btn.setAttribute('aria-label', h.label || h.id);
+    btn.style.position = 'absolute';
+    btn.style.left = (h.x * 100) + '%';
+    btn.style.top = (h.y * 100) + '%';
+    btn.style.width = (h.w * 100) + '%';
+    btn.style.height = (h.h * 100) + '%';
+    btn.style.transform = 'translate(-50%, -50%)';
+    btn.style.pointerEvents = 'auto';
+    
+    btn.addEventListener('pointerdown', (ev) => {
+      // Don't trigger if we're in debug mode and dragging
+      if (DEBUG && ev.target.dataset.debugMode) return;
+      
+      ev.stopPropagation();
+      ev.preventDefault();
+      resetIdleTimer();
+      if (h.go) setScreen(h.go);
+    });
+    
+    hotspotsEl.appendChild(btn);
   });
-  hotspotsEl.appendChild(el);
-  return el;
+  
+  // Render pulses
+  config.pulses.forEach(p => {
+    const pulse = document.createElement('div');
+    pulse.className = 'pulse';
+    pulse.style.left = (p.x * 100) + '%';
+    pulse.style.top = (p.y * 100) + '%';
+    hotspotsEl.appendChild(pulse);
+  });
+  
+  // Render debug editor if enabled
+  if (DEBUG) {
+    renderDebugEditor(screenName);
+  } else {
+    clearDebugEditor();
+  }
 }
+
+
+// Debug Editor Functions
+let debugContainer = null;
+let debugHelp = null;
+
+function clearDebugEditor() {
+  if (debugContainer) {
+    debugContainer.remove();
+    debugContainer = null;
+  }
+  if (debugHelp) {
+    debugHelp.remove();
+    debugHelp = null;
+  }
+}
+
+function renderDebugEditor(screenName) {
+  clearDebugEditor();
+  
+  if (!SCREENS[screenName]) return;
+  const config = SCREENS[screenName];
+  
+  // Create debug container
+  debugContainer = document.createElement('div');
+  debugContainer.className = 'debug-container';
+  debugContainer.style.pointerEvents = 'none';
+  hotspotsEl.appendChild(debugContainer);
+  
+  // Render hotspot editors
+  config.hotspots.forEach((h, idx) => {
+    renderHotspotBox(debugContainer, h, screenName, idx);
+  });
+  
+  // Render pulse editors
+  config.pulses.forEach((p, idx) => {
+    renderPulseDot(debugContainer, p, screenName, idx);
+  });
+  
+  // Show help text
+  debugHelp = document.createElement('div');
+  debugHelp.className = 'debug-help';
+  debugHelp.innerHTML = 
+    `<strong>DEBUG EDITOR</strong><br>` +
+    `🟨 Yellow boxes = hotspots | Drag to move, drag corner to resize<br>` +
+    `🟦 Cyan dots = pulses | Drag to move<br>` +
+    `No clicks registered in debug mode. Ready to copy/paste output!`;
+  document.body.appendChild(debugHelp);
+}
+
+function renderHotspotBox(container, hotspot, screenName, hotspotIdx) {
+  const box = document.createElement('div');
+  box.className = 'debug-box';
+  box.dataset.screenName = screenName;
+  box.dataset.hotspotIdx = hotspotIdx;
+  box.style.pointerEvents = 'auto';
+  
+  // Position and size
+  updateBoxStyle(box, hotspot);
+  
+  // Label
+  const label = document.createElement('div');
+  label.className = 'debug-label';
+  updateLabelText(label, hotspot);
+  box.appendChild(label);
+  
+  // Resize handle
+  const handle = document.createElement('div');
+  handle.className = 'debug-handle';
+  box.appendChild(handle);
+  
+  // Make draggable
+  let isDragging = false;
+  let isResizing = false;
+  let startX, startY;
+  let startX1, startY1, startW, startH;
+  
+  const onStart = (e) => {
+    if (e.target === handle) {
+      isResizing = true;
+      startX = e.touches ? e.touches[0].clientX : e.clientX;
+      startY = e.touches ? e.touches[0].clientY : e.clientY;
+      startX1 = hotspot.x;
+      startY1 = hotspot.y;
+      startW = hotspot.w;
+      startH = hotspot.h;
+    } else {
+      isDragging = true;
+      startX = e.touches ? e.touches[0].clientX : e.clientX;
+      startY = e.touches ? e.touches[0].clientY : e.clientY;
+      startX1 = hotspot.x;
+      startY1 = hotspot.y;
+    }
+    box.dataset.debugMode = '1';
+    e.stopPropagation();
+    e.preventDefault();
+  };
+  
+  const onMove = (e) => {
+    if (!isDragging && !isResizing) return;
+    
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const dX = (clientX - startX) / hotspotsEl.offsetWidth;
+    const dY = (clientY - startY) / hotspotsEl.offsetHeight;
+    
+    if (isDragging) {
+      hotspot.x = clamp01(startX1 + dX);
+      hotspot.y = clamp01(startY1 + dY);
+      updateBoxStyle(box, hotspot);
+      updateLabelText(label, hotspot);
+    } else if (isResizing) {
+      hotspot.w = clamp01(startW + dX);
+      hotspot.h = clamp01(startH + dY);
+      updateBoxStyle(box, hotspot);
+      updateLabelText(label, hotspot);
+    }
+    
+    e.stopPropagation();
+    e.preventDefault();
+  };
+  
+  const onEnd = (e) => {
+    if (isDragging || isResizing) {
+      logHotspotsForScreen(screenName);
+      logPulsesForScreen(screenName);
+    }
+    isDragging = false;
+    isResizing = false;
+    delete box.dataset.debugMode;
+    e.stopPropagation();
+    e.preventDefault();
+  };
+  
+  box.addEventListener('pointerdown', onStart);
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', onEnd);
+  
+  container.appendChild(box);
+}
+
+function renderPulseDot(container, pulse, screenName, pulseIdx) {
+  const dot = document.createElement('div');
+  dot.className = 'debug-dot';
+  dot.dataset.screenName = screenName;
+  dot.dataset.pulseIdx = pulseIdx;
+  dot.style.pointerEvents = 'auto';
+  
+  // Label
+  const label = document.createElement('div');
+  label.className = 'debug-dot-label';
+  updatePulseLabelText(label, pulse);
+  dot.appendChild(label);
+  
+  // Position
+  updateDotStyle(dot, pulse);
+  
+  // Make draggable
+  let isDragging = false;
+  let startX, startY;
+  let startX1, startY1;
+  
+  const onStart = (e) => {
+    isDragging = true;
+    startX = e.touches ? e.touches[0].clientX : e.clientX;
+    startY = e.touches ? e.touches[0].clientY : e.clientY;
+    startX1 = pulse.x;
+    startY1 = pulse.y;
+    dot.classList.add('dragging');
+    e.stopPropagation();
+    e.preventDefault();
+  };
+  
+  const onMove = (e) => {
+    if (!isDragging) return;
+    
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const dX = (clientX - startX) / hotspotsEl.offsetWidth;
+    const dY = (clientY - startY) / hotspotsEl.offsetHeight;
+    
+    pulse.x = clamp01(startX1 + dX);
+    pulse.y = clamp01(startY1 + dY);
+    updateDotStyle(dot, pulse);
+    updatePulseLabelText(label, pulse);
+    
+    e.stopPropagation();
+    e.preventDefault();
+  };
+  
+  const onEnd = (e) => {
+    if (isDragging) {
+      logHotspotsForScreen(screenName);
+      logPulsesForScreen(screenName);
+    }
+    isDragging = false;
+    dot.classList.remove('dragging');
+    e.stopPropagation();
+    e.preventDefault();
+  };
+  
+  dot.addEventListener('pointerdown', onStart);
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', onEnd);
+  
+  container.appendChild(dot);
+}
+
+function updateBoxStyle(boxEl, hotspot) {
+  boxEl.style.left = (hotspot.x * 100) + '%';
+  boxEl.style.top = (hotspot.y * 100) + '%';
+  boxEl.style.width = (hotspot.w * 100) + '%';
+  boxEl.style.height = (hotspot.h * 100) + '%';
+  boxEl.style.transform = 'translate(-50%, -50%)';
+}
+
+function updateDotStyle(dotEl, pulse) {
+  dotEl.style.left = (pulse.x * 100) + '%';
+  dotEl.style.top = (pulse.y * 100) + '%';
+}
+
+function updateLabelText(labelEl, hotspot) {
+  labelEl.textContent = 
+    `${hotspot.id} | x:${round3(hotspot.x)} y:${round3(hotspot.y)} w:${round3(hotspot.w)} h:${round3(hotspot.h)}`;
+}
+
+function updatePulseLabelText(labelEl, pulse) {
+  labelEl.textContent = `${pulse.id || '?'} | x:${round3(pulse.x)} y:${round3(pulse.y)}`;
+}
+
+// Logging functions for copy/paste
+function logHotspotsForScreen(screenName) {
+  const hs = SCREENS[screenName].hotspots.map(h => ({
+    id: h.id,
+    x: round3(h.x),
+    y: round3(h.y),
+    w: round3(h.w),
+    h: round3(h.h),
+    ...(h.go && { go: h.go }),
+    ...(h.label && { label: h.label })
+  }));
+  console.log(`[${screenName}] hotspots =`, JSON.stringify(hs, null, 2));
+}
+
+function logPulsesForScreen(screenName) {
+  const ps = SCREENS[screenName].pulses.map(p => ({
+    id: p.id,
+    x: round3(p.x),
+    y: round3(p.y)
+  }));
+  if (ps.length > 0) {
+    console.log(`[${screenName}] pulses =`, JSON.stringify(ps, null, 2));
+  }
+}
+
+
 
 function resetIdleTimer(){
   if(idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
   if(currentScreen !== 'idle'){
-    idleTimer = setTimeout(()=>{ goIdle(); }, IDLE_TIMEOUT_MS);
+    idleTimer = setTimeout(()=>{ setScreen('idle'); }, IDLE_TIMEOUT_MS);
   }
 }
 
 document.addEventListener('pointerdown', () => {
-  // global pointer only resets idle timer; navigation only via hotspots
   resetIdleTimer();
 }, {passive:true});
 
@@ -105,6 +431,7 @@ document.addEventListener('pointerdown', () => {
 async function loadPlaylist(){
   try{
     const r = await fetch(PLAYLIST_URL, {cache: 'no-store'});
+
     if(!r.ok) throw new Error('no playlist');
     const d = await r.json();
     SLOT_NAMES = d.slots || SLOT_NAMES;
@@ -163,6 +490,7 @@ function nextAd(){
   showAdByIndex(adIndex);
 }
 
+
 function showIdleBackground(){
   stopAds();
   safeSetBackground(ASSETS.idle);
@@ -172,17 +500,13 @@ function showAdByIndex(i){
   if(!ADS.length) return showIdleBackground();
   const ad = ADS[i];
   if(ad.isVideo){
-    // play video above screen
     videoEl.style.display = 'block';
     videoEl.src = ad.src;
     videoEl.load();
-    // ensure idle background behind video
     safeSetBackground(ASSETS.idle);
     const playPromise = videoEl.play();
-    // fallback if autoplay blocked
     if(playPromise && typeof playPromise.then === 'function'){
       playPromise.then(()=>{
-        // play started; wait for ended or fallback timer
         if(adFallbackTimer) clearTimeout(adFallbackTimer);
         adFallbackTimer = setTimeout(()=>{ nextAd(); }, AD_DURATION_MS + 2000);
       }).catch((e)=>{
@@ -191,14 +515,11 @@ function showAdByIndex(i){
         adTimer = setTimeout(nextAd, AD_DURATION_MS);
       });
     } else {
-      // non-promise play (older browsers)
       adFallbackTimer = setTimeout(()=>{ nextAd(); }, AD_DURATION_MS + 2000);
     }
-    // ended listener
     const onEnded = () => { videoEl.removeEventListener('ended', onEnded); nextAd(); };
     videoEl.addEventListener('ended', onEnded);
   } else {
-    // image ad
     videoEl.style.display = 'none';
     safeSetBackground(ad.src);
     if(adTimer) clearTimeout(adTimer);
@@ -216,129 +537,24 @@ async function startAdsLoop(){
   showAdByIndex(adIndex);
 }
 
-// Pulse drawing functions
-function drawPulses(pulseList){
-  // Clear existing pulses
-  const existingPulses = document.querySelectorAll('.pulse, .pulse-debug');
-  existingPulses.forEach(p => p.remove());
-  
-  // Draw each pulse marker
-  pulseList.forEach((marker, idx) => {
-    // Convert normalized coordinates (0..1) to percentages
-    const leftPercent = marker.x * 100;
-    const topPercent = marker.y * 100;
-    
-    // Create pulse animation element
-    const p = document.createElement('div');
-    p.className = 'pulse';
-    p.style.left = leftPercent + '%';
-    p.style.top = topPercent + '%';
-    hotspotsEl.appendChild(p);
-    
-    // Debug: draw cross at pulse center
-    if(DEBUG){
-      const cross = document.createElement('div');
-      cross.className = 'pulse-debug';
-      cross.title = marker.label || `Pulse ${idx+1}`;
-      cross.style.left = leftPercent + '%';
-      cross.style.top = topPercent + '%';
-      hotspotsEl.appendChild(cross);
-    }
-  });
-}
-
-// Navigation and screens
-function goIdle(){
-  currentScreen = 'idle';
-  clearHotspots();
-  stopAds();
-  safeSetBackground(ASSETS.idle);
-  // add full screen hotspot to go to menu
-  createHotspot({fullscreen: true, label: 'Open menu', onClick: ()=>{ goMenu(); stopAds(); }});
-}
-
-function goMenu(){
-  currentScreen = 'menu';
-  clearHotspots();
-  stopAds();
-  safeSetBackground(ASSETS.menu);
-  // create 4 menu buttons
-  const positions = [20,40,60,80];
-  positions.forEach((left, idx)=>{
-    createHotspot({left, top: 70, width: '18%', height: '12%', label: `Menu ${idx+1}`, onClick: ()=>{ goFloors(); }});
-  });
-}
-
-function goFloors(){
-  currentScreen = 'floors';
-  clearHotspots();
-  stopAds();
-  safeSetBackground(ASSETS.floors);
-  // placeholder: one hotspot to map1
-  createHotspot({left: 50, top: 70, width: '25%', height: '15%', label: 'Open map1', onClick: ()=>{ goMap1(); }});
-  // back to menu
-  createHotspot({left: 10, top: 10, width: '12%', height: '8%', label: 'Back', onClick: ()=>{ goMenu(); }});
-}
-
-function goMap1(){
-  currentScreen = 'map1';
-  clearHotspots();
-  stopAds();
-  safeSetBackground(ASSETS.map1);
-  createHotspot({left: 90, top: 10, width: '10%', height: '8%', label: 'Back', onClick: ()=>{ goFloors(); }});
-  createHotspot({left: 80, top: 70, width: '12%', height: '12%', label: 'Tech', onClick: ()=>{ goTechMap1(); }});
-  // Draw pulses for map1
-  if(PULSE_MARKERS.map1){
-    drawPulses(PULSE_MARKERS.map1);
-  }
-}
-
-function goTechMap1(){
-  currentScreen = 'tech_map1';
-  clearHotspots();
-  stopAds();
-  safeSetBackground(ASSETS.tech_map1);
-  createHotspot({left: 90, top: 10, width: '10%', height: '8%', label: 'Back', onClick: ()=>{ goMap1(); }});
-  
-  // Create clickable hotspots at normalized marker positions (converted to percentages)
-  if(PULSE_MARKERS.tech_map1){
-    PULSE_MARKERS.tech_map1.forEach((marker, i) => {
-      createHotspot({
-        left: marker.x * 100,
-        top: marker.y * 100,
-        width: '8%',
-        height: '8%',
-        label: marker.label || `Shop ${i+1}`,
-        onClick: ()=>{ alert(marker.label || `Shop ${i+1}`); }
-      });
-    });
-  }
-  
-  // Draw pulses for tech_map1
-  if(PULSE_MARKERS.tech_map1){
-    drawPulses(PULSE_MARKERS.tech_map1);
-  }
-}
-
-// start app
 function init(){
-  // ensure we always have idle bg
   safeSetBackground(ASSETS.idle);
-  // wire up video fallback to ensure we don't get stuck
   videoEl.addEventListener('error', () => { console.warn('video error'); videoEl.style.display='none'; });
-  // load playlist but don't start until idle
   loadPlaylist().then(()=>{
-    // start in idle
-    goIdle();
-    // start ads loop while idle
+    setScreen('idle');
     startAdsLoop();
   });
-  // ensure initial idle timer
   resetIdleTimer();
 }
 
-// expose minimal API to window for debugging (optional)
-window.__kiosk = {goIdle, goMenu, goFloors, goMap1, goTechMap1};
+// Expose API for debugging
+window.__kiosk = {
+  setScreen,
+  SCREENS,
+  DEBUG: () => window.__kiosk.DEBUG_ON(),
+  DEBUG_ON: () => { window.__kiosk._DEBUG = true; renderDebugEditor(currentScreen || 'idle'); },
+  DEBUG_OFF: () => { window.__kiosk._DEBUG = false; clearDebugEditor(); }
+};
 
 document.addEventListener('DOMContentLoaded', init);
 

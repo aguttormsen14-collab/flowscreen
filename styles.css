@@ -111,3 +111,91 @@ html, body {
   from { transform: scale(.6); opacity: 1; }
   to   { transform: scale(2.2); opacity: 0; }
 }
+
+/* Debug Editor Styles */
+.debug-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  z-index: 100;
+}
+
+.debug-box {
+  position: absolute;
+  outline: 3px solid #ffff00;
+  background: rgba(255, 255, 0, 0.1);
+  cursor: move;
+  touch-action: none;
+}
+
+.debug-handle {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #ff00ff;
+  border: 2px solid #ffff00;
+  bottom: -8px;
+  right: -8px;
+  cursor: nwse-resize;
+  touch-action: none;
+  border-radius: 2px;
+}
+
+.debug-label {
+  position: absolute;
+  top: -22px;
+  left: 0;
+  font-size: 11px;
+  font-family: monospace;
+  color: #ffff00;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 2px 6px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.debug-dot {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #00ffff;
+  border: 2px solid #ffff00;
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  touch-action: none;
+}
+
+.debug-dot.dragging {
+  cursor: grabbing;
+}
+
+.debug-dot-label {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-family: monospace;
+  color: #00ffff;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 2px 4px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.debug-help {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  font-size: 12px;
+  font-family: monospace;
+  color: #00ff00;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #00ff00;
+  padding: 12px;
+  z-index: 200;
+  pointer-events: none;
+  line-height: 1.4;
+}
