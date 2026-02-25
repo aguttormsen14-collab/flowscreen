@@ -1,6 +1,6 @@
 (() => {
 
-const DEBUG = false; // Set to true to enable drag & drop debug editor
+const DEBUG = true; // Set to true to enable drag & drop debug editor
 let editMode = false; // true while ArrowDown is held
 
 // Ordered list of screens for left/right navigation
