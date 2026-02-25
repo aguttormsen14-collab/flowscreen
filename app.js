@@ -1,6 +1,10 @@
 (() => {
 
 const DEBUG = true; // Set to true to enable drag & drop debug editor
+let editMode = false; // true while ArrowDown is held
+
+// Ordered list of screens for left/right navigation
+const SCREEN_ORDER = ["idle","menu","floors","map1","tech_map1"];
 
 const ASSETS = {
   idle: "assets/idle.png",
