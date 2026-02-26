@@ -237,6 +237,7 @@ function ensureAdsLayer(){
   const div = document.createElement('div');
   div.id = 'adsLayer';
   div.className = 'ads-layer hidden';
+  div.style.pointerEvents = 'none'; // Explicitly set initially
   document.body.appendChild(div);
   adsLayer = div;
   // move video element into overlay
@@ -261,8 +262,11 @@ function showAdsOverlay(){
   // Close any open store popup before showing ads
   closeStorePopup();
   
-  layer.classList.add('show');
+  // Explicitly remove hidden class and add show class
   layer.classList.remove('hidden');
+  layer.classList.add('show');
+  layer.style.pointerEvents = 'auto'; // Ensure pointer events enabled
+  
   adsRunning = true;
   showAdsTapCatcher();
 }
@@ -270,6 +274,9 @@ function showAdsOverlay(){
 function hideAdsOverlay(){
   const layer = ensureAdsLayer();
   layer.classList.remove('show');
+  layer.classList.add('hidden');
+  layer.style.pointerEvents = 'none'; // Ensure pointer events disabled
+  
   adsRunning = false;
   hideAdsTapCatcher();
 }
@@ -317,13 +324,13 @@ function showAdsTapCatcher(){
   const el = document.getElementById("adsTapCatcher");
   if (!el) return;
   el.classList.remove("hidden");
-  el.style.pointerEvents = "auto";
+  el.style.pointerEvents = "auto"; // Explicitly enable
 }
 function hideAdsTapCatcher(){
   const el = document.getElementById("adsTapCatcher");
   if (!el) return;
   el.classList.add("hidden");
-  el.style.pointerEvents = "none";
+  el.style.pointerEvents = "none"; // Explicitly disable
 }
 function stopAdsIfRunning(){ if(adsRunning && typeof stopAds==='function') stopAds(); }
 
