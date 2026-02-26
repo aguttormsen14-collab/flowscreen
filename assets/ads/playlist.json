@@ -1,4 +1,3 @@
-patch
 {
   "durationMs": 8000,
   "slots": ["slot1","slot2","slot3"],

@@ -617,43 +617,56 @@ function escapeHtml(str){
 }
 
 async function openStorePopup(storeId){
-  try{
-    const url = `${STORES_ASSETS}/${storeId}/info.json`;
-    const r = await fetch(url, {cache:'no-store'});
-    if(!r.ok) throw new Error('no store');
-    const info = await r.json();
+  const modal = document.getElementById('storeModal');
+  const body  = document.getElementById('storeBody');
+  const closeBtn = document.getElementById('storeClose');
+  if(!modal || !body) return;
 
-    // build content
-    const body = document.getElementById('storeBody');
-    const modal = document.getElementById('storeModal');
-    if(!body || !modal){ console.warn('store modal missing'); return; }
-    body.innerHTML = '';
+  // prøver i denne rekkefølgen (webp først, så png/jpg)
+  const exts = ['.webp', '.png', '.jpg', '.jpeg'];
+  let foundUrl = null;
 
-    const h = document.createElement('h2'); h.textContent = info.name || 'Store'; body.appendChild(h);
-    const meta = document.createElement('div'); meta.style.opacity='0.9'; meta.style.marginBottom='8px';
-    meta.innerHTML = `<strong>Category:</strong> ${escapeHtml(info.category||'')} &nbsp; <strong>Floor:</strong> ${escapeHtml(info.floor||'')}`;
-    body.appendChild(meta);
+  for(const ext of exts){
+    const url = `${STORES_ASSETS}/${storeId}/popup${ext}`;
+    try{
+      // HEAD kan være blokkert noen steder -> bruk GET med Range fallback
+      const head = await fetch(url, { method:'HEAD', cache:'no-store' });
+      if(head.ok){ foundUrl = url; break; }
 
-    if(info.hours) { const p=document.createElement('p'); p.textContent = `Hours: ${info.hours}`; body.appendChild(p); }
-    if(info.phone) { const p=document.createElement('p'); p.textContent = `Phone: ${info.phone}`; body.appendChild(p); }
-    if(info.website) { const a=document.createElement('a'); a.href = info.website; a.textContent = info.website; a.target='_blank'; body.appendChild(a); }
-    if(info.text) { const p=document.createElement('p'); p.textContent = info.text; body.appendChild(p); }
-
-    // first image
-    if(Array.isArray(info.images) && info.images.length>0){
-      const img = document.createElement('img');
-      img.src = `${STORES_ASSETS}/${storeId}/${info.images[0]}`;
-      img.style.maxWidth='100%'; img.style.display='block'; img.style.marginTop='12px';
-      body.appendChild(img);
+      const get = await fetch(url, {
+        method:'GET',
+        headers: { Range: 'bytes=0-0' },
+        cache:'no-store'
+      });
+      if(get.ok){ foundUrl = url; break; }
+    }catch(e){
+      // ignorer og prøv neste ext
     }
+  }
 
-    modal.classList.remove('hidden');
+  if(!foundUrl){
+    body.innerHTML = `
+      <div style="color:#fff; font-family:sans-serif;">
+        Fant ikke popup-bilde for <b>${storeId}</b>.<br>
+        Legg inn en fil som heter <code>popup.png</code> / <code>popup.jpg</code> / <code>popup.webp</code>
+        i mappen <code>stores/${storeId}/</code>.
+      </div>
+    `;
+  } else {
+    body.innerHTML = `
+      <img
+        src="${foundUrl}"
+        alt="${storeId}"
+        style="width:100%;height:auto;display:block;border-radius:12px;"
+        onerror="this.remove()"
+      >
+    `;
+  }
 
-    // close handlers
-    const closeBtn = document.getElementById('storeClose');
-    if(closeBtn) closeBtn.onclick = closeStorePopup;
-    modal.onclick = (ev) => { if(ev.target === modal) closeStorePopup(); };
-  }catch(e){ console.warn('openStorePopup error', e); }
+  modal.classList.remove('hidden');
+
+  if(closeBtn) closeBtn.onclick = closeStorePopup;
+  modal.onclick = (e) => { if(e.target === modal) closeStorePopup(); };
 }
 
 function closeStorePopup(){
@@ -661,38 +674,6 @@ function closeStorePopup(){
   if(!modal) return;
   modal.classList.add('hidden');
   const body = document.getElementById('storeBody'); if(body) body.innerHTML='';
-}
-
-// === popup for stores ===
-function openStorePopup(storeId){
-
-  const modal = document.getElementById('storeModal');
-  const body = document.getElementById('storeBody');
-
-  if(!modal || !body) return;
-
-  const imgUrl = `${STORES_ASSETS}/${storeId}/popup.png`;
-
-  body.innerHTML = `
-    <img src="${imgUrl}"
-         style="
-           width:100%;
-           height:auto;
-           border-radius:12px;
-           display:block;
-         ">
-  `;
-
-  modal.classList.remove('hidden');
-
-  // close button
-  const closeBtn = document.getElementById('storeClose');
-  closeBtn.onclick = closeStorePopup;
-
-  // click outside
-  modal.onclick = (e)=>{
-    if(e.target === modal) closeStorePopup();
-  };
 }
 
 // === PLAYLIST POLLING ===
