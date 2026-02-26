@@ -26,11 +26,34 @@
   </div>
   <!-- discreet admin access, shown only in debug mode -->
   <a id="adminLink" href="./admin/login.html">Admin</a>
-  <!-- Supabase config (load before client library) -->
+  
+  <!-- GitHub Pages base path detection (FIRST) -->
+  <script src="base-path.js"></script>
+  
+  <!-- Supabase configuration (load before client library) -->
   <script src="config.js"></script>
   <script src="supabase-config.js"></script>
-  <!-- Supabase client library -->
+  
+  <!-- Supabase client library from CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/supabase.min.js"></script>
+  
+  <!-- Main application (player) -->
   <script src="app.js"></script>
+  
+  <!-- Preflight validation (verify critical scripts loaded) -->
+  <script>
+    // Check that supabase-config helpers are available
+    if (typeof window.getSupabaseConfig !== 'function' || typeof window.isSupabaseConfigured !== 'function') {
+      console.error('[PREFLIGHT] supabase-config.js not loaded (path mismatch on GitHub Pages?)');
+      const appEl = document.getElementById('app');
+      if (appEl) {
+        appEl.innerHTML = '<div style="padding:20px; color: red; font-family: monospace;"><strong>Setup Error:</strong> supabase-config.js not loaded. Check Network tab for 404s.</div>';
+      }
+    }
+    // Check that Supabase client library loaded
+    if (typeof window.supabase === 'undefined') {
+      console.error('[PREFLIGHT] Supabase client library (CDN) not loaded');
+    }
+  </script>
 </body>
 </html>

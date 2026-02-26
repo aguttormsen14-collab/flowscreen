@@ -61,12 +61,38 @@
   </div>
 
   <!-- IMPORTANT: scripts must be at end of body and in this order -->
-  <script src="../config.js?v=99"></script>
+  
+  <!-- GitHub Pages base path detection (FIRST) -->
+  <script src="../base-path.js"></script>
+  
+  <!-- Root configuration (from parent directory) -->
+  <script src="../config.js"></script>
+  
+  <!-- Supabase client library from CDN (before config helpers) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/supabase.min.js"></script>
-  <script src="../supabase-config.js?v=99"></script>
+  
+  <!-- Supabase configuration helpers (from parent directory) -->
+  <script src="../supabase-config.js"></script>
 
-  <!-- Admin logic (library + bootstrap) -->
-  <script src="./admin-ads.js?v=99"></script>
-  <script src="./dashboard.js?v=99"></script>
+  <!-- Admin libraries and bootstrap -->
+  <script src="./admin-ads.js"></script>
+  <script src="./dashboard.js"></script>
+  
+  <!-- Preflight validation (verify critical scripts loaded) -->
+  <script>
+    // Check that supabase-config helpers are available
+    if (typeof window.getSupabaseConfig !== 'function' || typeof window.isSupabaseConfigured !== 'function') {
+      const zoneEl = document.getElementById('adsDropzone');
+      if (zoneEl) {
+        zoneEl.innerHTML = '❌ Mangler supabase-config.js (helpers)<br><small>Sjekk Network-fanen for 404-feil</small>';
+        zoneEl.style.color = '#dc2626';
+      }
+      console.error('[ADMIN PREFLIGHT] supabase-config.js not loaded');
+    }
+    // Check that Supabase client library loaded
+    if (typeof window.supabase === 'undefined') {
+      console.error('[ADMIN PREFLIGHT] Supabase client library (CDN) not loaded');
+    }
+  </script>
 </body>
 </html>

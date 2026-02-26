@@ -47,8 +47,23 @@
     </div>
   </div>
 
+  <!-- GitHub Pages base path detection (FIRST) -->
+  <script src="../base-path.js"></script>
+  
+  <!-- Configuration from parent directory -->
   <script src="../config.js"></script>
+  
+  <!-- Supabase configuration helpers -->
   <script src="../supabase-config.js"></script>
+  
+  <!-- Login page logic -->
   <script src="login.js"></script>
+  
+  <!-- Preflight validation -->
+  <script>
+    if (typeof window.getSupabaseConfig !== 'function') {
+      console.warn('[LOGIN] supabase-config helpers not loaded');
+    }
+  </script>
 </body>
 </html>
