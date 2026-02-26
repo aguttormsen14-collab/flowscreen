@@ -12,11 +12,12 @@
     <div class="topbar">
       <div class="title">
         <img
+          id="sxLogo"
           src=""
           alt="Saxvik Hub"
           class="logo"
           onerror="console.error('Logo ikke funnet:', this.src);"
-          data-asset="assets/brand/saxvik-hub-logo.png?v=99"
+          data-asset="assets/brand/saxvik-hub-logo.png"
         />
         <div class="title-text">
           <h1>Saxvik Admin</h1>
@@ -90,6 +91,11 @@
       if (!p) return;
       if (el.tagName === 'IMG' || el.tagName === 'SCRIPT') el.src = asset(p);
       else if (el.tagName === 'LINK') el.href = asset(p);
+    });
+    // ensure logo is explicitly set after DOMContentLoaded
+    document.addEventListener("DOMContentLoaded", () => {
+      const img = document.getElementById("sxLogo") || document.querySelector("img[data-role='logo']");
+      if (img) img.src = asset("assets/brand/saxvik-hub-logo.png");
     });
   </script>
 

@@ -12,6 +12,13 @@ function checkAuth() {
 }
 checkAuth();
 
+// helper for dynamic supabase client retrieval (mirrors admin-ads.js)
+function getSupabase() {
+  const s = window.supabase;
+  if (s && s.storage && typeof s.createClient !== 'function') return s;
+  return null;
+}
+
 // Logout
 const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) {
@@ -99,10 +106,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const cfg = window.getSupabaseConfig();
   if (installEl) installEl.textContent = cfg.installSlug || 'ukjent';
 
-  // Init client (from admin-ads.js)
-  const client = (typeof initSupabaseClient === 'function') ? await initSupabaseClient() : null;
-
-  if (!client) {
+  // ensure supabase client is ready before interacting with UI
+  const supabase = getSupabase();
+  if (!supabase) {
     if (zoneEl) {
       zoneEl.textContent = '❌ Supabase ikke konfigurert / ikke tilkoblet';
       zoneEl.style.color = '#dc2626';
