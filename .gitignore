@@ -1,3 +1,5 @@
 # ignore local supabase credentials
-supabase-config.js
 config.local.js
+
+# ensure GitHub Pages includes this helper
+!supabase-config.js
