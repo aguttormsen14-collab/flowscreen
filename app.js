@@ -262,7 +262,6 @@ let adTimer = null;
 let adFallbackTimer = null;
 // overlay layer and state
 let adsLayer = null;
-let adsRunning = false;
 // === VIDEO FAILSAFE ===
 let videoWatchdogTimer = null;
 let videoMaxTimer = null;
