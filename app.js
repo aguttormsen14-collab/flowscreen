@@ -35,8 +35,10 @@ function withBase(path) {
 // === BEHAVIOR CONFIG (easy toggle) ===
 const TAP_BEHAVIOR = "C"; // "C" = welcome overlay, "A" = go directly to menu
 const PRIMARY_SCREEN = "map1"; // used by C mode
-const IDLE_MIN_MS = 15000; // keep idle at least 15s before ads can start
+const IDLE_MIN_MS = 10000; // auto-start ads after 10s of idle
 
+let idleToAdsTimer = null; // timer from idle -> ads auto-start
+let adsRunning = false; // true when ads are actively playing
 let lastIdleTs = 0; // track when idle screen was shown
 
 // map artifacts cleanup (pulses, overlays, special layers)
@@ -53,6 +55,34 @@ function clearMapArtifacts() {
     mapLayer.style.backgroundImage = "";
     mapLayer.style.display = "none";
   }
+}
+
+// idle->ads timer management
+function stopIdleToAdsTimer() {
+  if (idleToAdsTimer) { clearTimeout(idleToAdsTimer); idleToAdsTimer = null; }
+}
+
+function scheduleAdsAfterIdle() {
+  stopIdleToAdsTimer();
+  idleToAdsTimer = setTimeout(() => {
+    if (currentScreen === "idle") {
+      clearMapArtifacts();
+      if (typeof showAdsOverlay === "function") showAdsOverlay();
+      else if (typeof startAdsLoop === "function") startAdsLoop();
+      adsRunning = true;
+    }
+  }, IDLE_MIN_MS);
+}
+
+function stopAdsNow() {
+  if (!adsRunning) return;
+  try { if (typeof stopAds === "function") stopAds(); } catch(e) {}
+  try { if (typeof hideAdsOverlay === "function") hideAdsOverlay(); } catch(e) {}
+  adsRunning = false;
+}
+
+function isAdsScreen(id) {
+  return id === "ads" || id === "ad" || (id && id.includes("reklame"));
 }
 
 // === DEBUG TOGGLE ===
@@ -524,7 +554,12 @@ function setScreen(screenName) {
   currentScreen = screenName;
   const config = SCREENS[screenName];
 
-  // record when we entered idle so we can enforce minimum delay before ads
+  // when leaving idle, stop the auto-start timer
+  if (currentScreen !== 'idle' && currentScreen !== 'ads' && !isAdsScreen(currentScreen)) {
+    stopIdleToAdsTimer();
+  }
+
+  // record when we entered idle
   if (screenName === 'idle') {
     lastIdleTs = Date.now();
   }
@@ -578,10 +613,9 @@ safeSetBackground(config.bg);
     clearDebugEditor();
   }
 
-  // if we just moved to idle screen, kick off ads loop
+  // if we just moved to idle screen, schedule auto-start of ads
   if(screenName === 'idle'){
-    // don't await; startAdsLoop handles empty-ADS case itself
-    startAdsLoop();
+    scheduleAdsAfterIdle();
   }
 
   // update hint visibility after screen change
@@ -1460,13 +1494,26 @@ function init(){
   // global tap handler (records touch, handles passive screens)
   document.addEventListener('pointerdown', (ev) => {
     recordTouch();
-    if (adsRunning) {
-      hideAdsOverlay();
-      stopAds();
-      hideAdsTapCatcher();
-      showWelcomeOverlay();
+    // if ads are running/visible: return to idle + restart idle timer
+    if (adsRunning || isAdsScreen(currentScreen)) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      stopIdleToAdsTimer();
+      stopAdsNow();
+      clearMapArtifacts();
+      // return to idle welcome screen
+      setScreen('idle');
+      showIdleBackground();
+      scheduleAdsAfterIdle();
       return;
     }
+    // if already on idle, reset the timer so user has time before ads start
+    if (currentScreen === 'idle') {
+      stopIdleToAdsTimer();
+      scheduleAdsAfterIdle();
+      return;
+    }
+    // handle other passive screens
     if (isPassiveScreen(currentScreen)) {
       // prevent hotspots / other behavior
       ev.preventDefault();
