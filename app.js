@@ -33,8 +33,6 @@ function withBase(path) {
 }
 
 // === BEHAVIOR CONFIG (easy toggle) ===
-const TAP_BEHAVIOR = "C"; // "C" = welcome overlay, "A" = go directly to menu
-const PRIMARY_SCREEN = "map1"; // used by C mode
 const IDLE_MIN_MS = 10000; // auto-start ads after 10s of idle
 
 let idleToAdsTimer = null; // timer from idle -> ads auto-start
@@ -331,20 +329,7 @@ function updateTouchHintVisibility() {
   }
 }
 
-let welcomeOverlayEl = null;
-function showWelcomeOverlay() {
-  if (!welcomeOverlayEl) return;
-  hideAdsTapCatcher();
-  welcomeOverlayEl.classList.remove('hidden');
-  requestAnimationFrame(() => welcomeOverlayEl.classList.add('visible'));
-}
-function hideWelcomeOverlay() {
-  if (!welcomeOverlayEl) return;
-  welcomeOverlayEl.classList.remove('visible');
-  setTimeout(() => welcomeOverlayEl.classList.add('hidden'), 300);
-}
-
-// DOM elements creation for hint and overlay
+// DOM elements creation for hint
 function createTouchHint() {
   const div = document.createElement('div');
   div.id = 'touchHint';
@@ -352,43 +337,6 @@ function createTouchHint() {
   div.textContent = 'Trykk på skjermen for å starte';
   div.style.display = 'none';
   document.body.appendChild(div);
-}
-
-function createWelcomeOverlay() {
-  const ov = document.createElement('div');
-  ov.id = 'welcomeOverlay';
-  ov.className = 'sx-overlay hidden';
-  ov.innerHTML = `
-    <div class="sx-card">
-      <div class="sx-title">Velkommen 👋</div>
-      <div class="sx-subtitle">Trykk for å finne frem</div>
-      <div class="sx-actions">
-        <button id="sxStartBtn" class="sx-btn primary">Kart</button>
-        <button id="sxMenuBtn" class="sx-btn">Meny</button>
-      </div>
-      <div class="sx-hint">Du kan alltid trykke på skjermen for å starte.</div>
-    </div>
-  `;
-  document.body.appendChild(ov);
-  welcomeOverlayEl = ov;
-
-  // interactions
-  ov.addEventListener('pointerdown', (ev) => {
-    if (ev.target === ov) {
-      hideWelcomeOverlay();
-      setScreen(PRIMARY_SCREEN);
-    }
-  });
-  document.getElementById('sxStartBtn').addEventListener('click', () => {
-    recordTouch();
-    hideWelcomeOverlay();
-    setScreen(PRIMARY_SCREEN);
-  });
-  document.getElementById('sxMenuBtn').addEventListener('click', () => {
-    recordTouch();
-    hideWelcomeOverlay();
-    setScreen('menu');
-  });
 }
 
 // String helpers
@@ -1459,7 +1407,6 @@ function init(){
 
   // setup onboarding UI elements
   createTouchHint();
-  createWelcomeOverlay();
   // create tap catcher early (will stay hidden until ads play)
   const catcher = document.createElement('div');
   catcher.id = 'adsTapCatcher';
@@ -1482,12 +1429,10 @@ function init(){
     // cleanup map artifacts to avoid pulse ghosts behind overlays
     if (typeof clearMapArtifacts === "function") clearMapArtifacts();
 
-    // show Welcome overlay (C)
-    if (typeof showWelcomeOverlay === "function") {
-      showWelcomeOverlay();
-    } else {
-      console.error("[ADS TAP] showWelcomeOverlay() not found");
-    }
+    // go straight back to idle screen (no modal)
+    setScreen('idle');
+    showIdleBackground();
+    scheduleAdsAfterIdle();
   });
 
   // global tap handler (records touch, handles passive screens)
@@ -1517,12 +1462,9 @@ function init(){
       // prevent hotspots / other behavior
       ev.preventDefault();
       ev.stopPropagation();
-      if (TAP_BEHAVIOR === "A") {
-        clearMapArtifacts();
-        setScreen('menu');
-      } else {
-        showWelcomeOverlay();
-      }
+      // just reset idle timer; no modal
+      stopIdleToAdsTimer();
+      scheduleAdsAfterIdle();
     }
   });
 

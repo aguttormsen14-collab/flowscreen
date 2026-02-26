@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wayfinding</title>
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
   <div id="app">
     <div id="screen">
@@ -24,10 +26,10 @@
   </div>
   <!-- discreet admin access, shown only in debug mode -->
   <a id="adminLink" href="./admin/login.html">Admin</a>
-  
+
   <!-- GitHub Pages base path detection (FIRST) -->
   <script src="base-path.js"></script>
-  
+
   <!-- Root configuration -->
   <script src="./config.js"></script>
 
@@ -37,10 +39,10 @@
 
   <!-- Supabase configuration helpers -->
   <script src="./supabase-config.js"></script>
-  
+
   <!-- Main application (player) -->
   <script src="app.js"></script>
-  
+
   <!-- Preflight validation (verify critical scripts loaded) -->
   <script>
     // Check that supabase-config helpers are available
@@ -57,4 +59,5 @@
     }
   </script>
 </body>
+
 </html>
