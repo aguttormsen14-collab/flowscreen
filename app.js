@@ -152,19 +152,18 @@ function safeSetBackground(url){
     return;
   }
 
-  // Hvis samme bilde -> gjør en veldig kort “microfade”
   const same = (url === currentBgUrl);
 
-  // Fade out
+  // start fade out
   screenEl.classList.add('is-fading');
 
-  // Fallback: aldri bli stuck i is-fading (f.eks. hvis onload ikke fyrer)
+  // never get stuck fading (and handles same-image microfade)
   const timeout = setTimeout(() => {
     if(token !== bgFadeToken) return;
     screenEl.style.backgroundImage = `url("${url}")`;
     currentBgUrl = url;
     requestAnimationFrame(() => screenEl.classList.remove('is-fading'));
-  }, same ? 60 : 400);
+  }, same ? 60 : 450);
 
   const img = new Image();
   img.onload = () => {
@@ -278,10 +277,10 @@ function setScreen(screenName) {
   currentScreen = screenName;
   const config = SCREENS[screenName];
 
-  clearHotspots();
-  stopAds();
-  videoEl.style.display = 'none';
-  safeSetBackground(config.bg);
+clearHotspots();
+stopAds();
+videoEl.style.display = 'none';
+safeSetBackground(config.bg);
 
   // create hotspots with data attributes so layout can set px coords
   config.hotspots.forEach((h, i) => {
