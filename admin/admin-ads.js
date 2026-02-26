@@ -4,12 +4,12 @@ let supabaseClient = null;
 
 // Initialize Supabase client if configured
 function initSupabaseClient() {
-  if (!window.isSupabaseConfigured()) {
-    console.warn('Supabase not configured');
+  if (typeof window.isSupabaseConfigured !== 'function' || !window.isSupabaseConfigured()) {
+    console.warn('Supabase not configured or helper missing');
     return null;
   }
   if (window.supabase) {
-    const cfg = window.getSupabaseConfig();
+    const cfg = window.getSupabaseConfig ? window.getSupabaseConfig() : {};
     supabaseClient = window.supabase.createClient(cfg.url, cfg.anonKey);
     console.log('Supabase client initialized');
   }

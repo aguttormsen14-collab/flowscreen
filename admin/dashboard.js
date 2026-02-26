@@ -93,9 +93,5 @@ async function updateStatusPanel() {
   });
 }
 
-// initialize panel after DOM ready
-window.addEventListener('DOMContentLoaded', () => {
-  initUploadZone();
-  refreshAdsPanel();
-});
+// (previous initialization covered above; duplicate listener removed)
 
