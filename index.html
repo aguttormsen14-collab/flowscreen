@@ -26,9 +26,11 @@
   </div>
   <!-- discreet admin access, shown only in debug mode -->
   <a id="adminLink" href="./admin/login.html">Admin</a>
-  <!-- Supabase client (used for ad listing) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/supabase.min.js"></script>
+  <!-- Supabase config (load before client library) -->
+  <script src="config.local.js"></script>
   <script src="supabase-config.js"></script>
+  <!-- Supabase client library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/supabase.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -1,2 +1,3 @@
 # ignore local supabase credentials
 supabase-config.js
+config.local.js

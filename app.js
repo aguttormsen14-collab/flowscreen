@@ -108,8 +108,9 @@ let AD_DURATION_MS = 8000;
 
 // supabase client (optional, configured via globals)
 let supabaseClient = null;
-if(window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY){
-  supabaseClient = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+if(window.supabase && window.isSupabaseConfigured()){
+  const cfg = window.getSupabaseConfig();
+  supabaseClient = window.supabase.createClient(cfg.url, cfg.anonKey);
 } else {
   console.warn('Supabase not configured – ad playback disabled');
 }
