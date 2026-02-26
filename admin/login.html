@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Login</title>
   <link rel="stylesheet" href="login.css">
 </head>
+
 <body data-theme="saxvik-clean">
 
   <div class="wrap">
@@ -49,16 +51,19 @@
 
   <!-- GitHub Pages base path detection (FIRST) -->
   <script src="../base-path.js"></script>
-  
+
   <!-- Configuration from parent directory -->
   <script src="../config.js"></script>
-  
+
+  <!-- Supabase client library from CDN (before helpers if used) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/supabase.min.js"></script>
+
   <!-- Supabase configuration helpers -->
   <script src="../supabase-config.js"></script>
-  
+
   <!-- Login page logic -->
   <script src="login.js"></script>
-  
+
   <!-- Preflight validation -->
   <script>
     if (typeof window.getSupabaseConfig !== 'function') {
@@ -66,4 +71,5 @@
     }
   </script>
 </body>
+
 </html>

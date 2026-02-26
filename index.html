@@ -9,14 +9,12 @@
 <body>
   <div id="app">
     <div id="screen">
-  <div id="bgA" class="bg-layer"></div>
-  <div id="bgB" class="bg-layer"></div>
+      <div id="bgA" class="bg-layer"></div>
+      <div id="bgB" class="bg-layer"></div>
 
-  <video id="video" ...></video>
-  <div id="hotspots"></div>
-</div>
-    <video id="video" playsinline muted></video>
-    <div id="hotspots"></div>
+      <video id="video" playsinline muted></video>
+      <div id="hotspots"></div>
+    </div>
   </div>
   <div id="storeModal" class="modal hidden">
     <div class="modal-card">
@@ -30,12 +28,14 @@
   <!-- GitHub Pages base path detection (FIRST) -->
   <script src="base-path.js"></script>
   
-  <!-- Supabase configuration (load before client library) -->
-  <script src="config.js"></script>
-  <script src="supabase-config.js"></script>
-  
-  <!-- Supabase client library from CDN -->
+  <!-- Root configuration -->
+  <script src="./config.js"></script>
+
+  <!-- Supabase client library from CDN (must load before helpers are used) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/supabase.min.js"></script>
+
+  <!-- Supabase configuration helpers -->
+  <script src="./supabase-config.js"></script>
   
   <!-- Main application (player) -->
   <script src="app.js"></script>

@@ -21,24 +21,74 @@ if (logoutBtn) {
   });
 }
 
+function showBootError(message, details) {
+  const zoneEl = document.getElementById('adsDropzone');
+  const statusEl = document.getElementById('statusContent');
+
+  const html = `
+    <div style="padding:10px; border:1px solid #fecaca; background:#fff1f2; color:#991b1b; border-radius:10px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
+      <div style="font-weight:700; margin-bottom:6px;">Setup Error</div>
+      <div style="white-space:pre-wrap;">${message}</div>
+      ${details ? `<div style="margin-top:8px; opacity:0.9; white-space:pre-wrap;">${details}</div>` : ''}
+    </div>
+  `;
+
+  if (zoneEl) {
+    zoneEl.innerHTML = html;
+    zoneEl.classList.remove('drag-active');
+  }
+  if (statusEl) {
+    statusEl.innerHTML = html;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const zoneEl = document.getElementById('adsDropzone');
   const msgEl = document.getElementById('adsMessage');
   const listEl = document.getElementById('adsList');
   const installEl = document.getElementById('currentInstall');
 
-  // Quick boot logs (helps spot cache/404 immediately)
-  console.log('[ADMIN] has config:', !!window.SUPABASE_URL, !!window.SUPABASE_ANON_KEY);
-  console.log('[ADMIN] has helpers:', typeof window.getSupabaseConfig, typeof window.isSupabaseConfigured);
-  console.log('[ADMIN] has supabase lib:', !!window.supabase);
-  console.log('[ADMIN] has admin functions:', typeof initSupabaseClient, typeof initUploadZone, typeof renderAdsList);
+  // Cache-safe boot lines
+  const now = new Date().toISOString();
+  console.log('[BOOT]', now, 'dashboard.js loaded');
+
+  if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY) console.log('[BOOT] config loaded');
+  else console.warn('[BOOT] config missing');
+
+  if (typeof window.getSupabaseConfig === 'function' && typeof window.isSupabaseConfigured === 'function') console.log('[BOOT] helpers loaded');
+  else console.warn('[BOOT] helpers missing');
+
+  if (window.supabase) console.log('[BOOT] supabase loaded');
+  else console.warn('[BOOT] supabase missing');
 
   // If helpers missing -> supabase-config.js not loaded (likely 404/cache)
   if (typeof window.getSupabaseConfig !== 'function' || typeof window.isSupabaseConfigured !== 'function') {
-    if (zoneEl) {
-      zoneEl.textContent = '❌ Mangler supabase-config.js (helpers)';
-      zoneEl.style.color = '#dc2626';
-    }
+    const tried = new URL('../supabase-config.js', location.href).toString();
+    showBootError(
+      'Mangler supabase-config.js (helpers).',
+      `Åpne denne URL-en i nettleseren (må ikke være 404):\n${tried}\n\nSjekk Network-fanen for 404 og hard-reload (Ctrl+F5).`
+    );
+    updateStatusPanel();
+    return;
+  }
+
+  // If config missing
+  if (!window.isSupabaseConfigured()) {
+    const tried = new URL('../config.js', location.href).toString();
+    showBootError(
+      'Mangler SUPABASE_URL / SUPABASE_ANON_KEY fra config.js.',
+      `Åpne denne URL-en i nettleseren (må ikke være 404):\n${tried}`
+    );
+    updateStatusPanel();
+    return;
+  }
+
+  // If supabase lib missing
+  if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+    showBootError(
+      'Supabase CDN-biblioteket er ikke lastet (window.supabase mangler).',
+      'Sjekk at https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/supabase.min.js lastes med 200 i Network.'
+    );
     updateStatusPanel();
     return;
   }
