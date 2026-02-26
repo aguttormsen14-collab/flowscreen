@@ -237,7 +237,7 @@ function ensureAdsLayer(){
   const div = document.createElement('div');
   div.id = 'adsLayer';
   div.className = 'ads-layer hidden';
-  div.style.pointerEvents = 'none'; // Explicitly set initially
+  div.style.pointerEvents = 'none'; // ALWAYS none - tap catcher handles interaction
   document.body.appendChild(div);
   adsLayer = div;
   // move video element into overlay
@@ -263,22 +263,21 @@ function showAdsOverlay(){
   closeStorePopup();
   
   // Explicitly remove hidden class and add show class
+  // NOTE: pointer-events stays NONE - tap catcher (z-index 9996) handles clicks
   layer.classList.remove('hidden');
   layer.classList.add('show');
-  layer.style.pointerEvents = 'auto'; // Ensure pointer events enabled
   
   adsRunning = true;
-  showAdsTapCatcher();
+  showAdsTapCatcher(); // This enables pointer-events on tap catcher
 }
 
 function hideAdsOverlay(){
   const layer = ensureAdsLayer();
   layer.classList.remove('show');
   layer.classList.add('hidden');
-  layer.style.pointerEvents = 'none'; // Ensure pointer events disabled
   
   adsRunning = false;
-  hideAdsTapCatcher();
+  hideAdsTapCatcher(); // This disables pointer-events on tap catcher
 }
 
 const IDLE_TIMEOUT_MS = 30000;
