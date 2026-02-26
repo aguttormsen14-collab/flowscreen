@@ -244,6 +244,7 @@ function ensureAdsLayer(){
   if(videoEl && videoEl.parentElement !== adsLayer){
     adsLayer.appendChild(videoEl);
     videoEl.style.zIndex = '1';
+    videoEl.style.pointerEvents = 'none'; // CRITICAL: don't block tap-catcher clicks
     // ensure covers the overlay
     videoEl.style.position = 'absolute';
     videoEl.style.top = '0';
@@ -533,16 +534,17 @@ function setScreen(screenName) {
     clearMapArtifacts();
   }
 
-  currentScreen = screenName;
-  const config = SCREENS[screenName];
-
-  // when leaving idle, stop the auto-start timer
+  // CRITICAL: Check BEFORE changing currentScreen
   const wasIdle = currentScreen === 'idle';
   const goingToIdle = screenName === 'idle';
   
+  // when leaving idle, stop the auto-start timer
   if (wasIdle && !goingToIdle) {
     stopIdleToAdsTimer();
   }
+
+  currentScreen = screenName;
+  const config = SCREENS[screenName];
 
   // record when we entered idle
   if (goingToIdle) {
