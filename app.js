@@ -1041,9 +1041,11 @@ async function loadAdsFromSupabase(){
       showIdleBackground();
       return;
     }
-    // start ads loop with the new set
-    adIndex = 0;
-    showAdByIndex(adIndex);
+    // Only show ads if we're on idle (not polling ads while user viewing map)
+    if (currentScreen === 'idle') {
+      adIndex = 0;
+      showAdByIndex(adIndex);
+    }
   } catch (e) {
     console.error('[ADS] loadAdsFromSupabase error', e);
     showIdleBackground();
