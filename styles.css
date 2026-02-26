@@ -240,6 +240,7 @@ html, body {
 }
 .ads-layer.show {
   opacity: 1;
+  pointer-events: auto;
 }
 .ads-layer img,
 .ads-layer video {
