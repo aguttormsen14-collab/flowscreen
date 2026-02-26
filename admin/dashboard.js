@@ -125,6 +125,49 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderAdsList(listEl, msgEl);
   }
 
+  // demo orientation/weather controls
+  const orientRadios = document.querySelectorAll('input[name="orientation"]');
+  const previewEl = document.getElementById('orientationPreview');
+  const orientMsg = document.getElementById('orientationMessage');
+  function updateOrientation(){
+    const val = localStorage.getItem('sx_orientation') || 'portrait';
+    orientRadios.forEach(r=> r.checked = (r.value===val));
+    if(previewEl) previewEl.className = 'preview '+val;
+  }
+  orientRadios.forEach(r=> r.addEventListener('change', () => {
+    const val = r.value;
+    localStorage.setItem('sx_orientation', val);
+    updateOrientation();
+    if(orientMsg) orientMsg.textContent = `✅ Lagret: ${val==='landscape'?'Vannrett':'Loddrett'}`;
+  }));
+  updateOrientation();
+
+  const weatherToggle = document.getElementById('weatherToggle');
+  const weatherPreview = document.getElementById('weatherPreview');
+  const weatherMsg = document.getElementById('weatherMessage');
+  function updateWeather(){
+    const enabled = localStorage.getItem('sx_weather_enabled') === 'true';
+    if(weatherToggle) weatherToggle.checked = enabled;
+    if(weatherPreview) weatherPreview.classList.toggle('hidden', !enabled);
+  }
+  if(weatherToggle){
+    weatherToggle.addEventListener('change', () => {
+      const enabled = weatherToggle.checked;
+      localStorage.setItem('sx_weather_enabled', enabled?'true':'false');
+      updateWeather();
+      if(weatherMsg) weatherMsg.textContent = enabled ? '✅ Vær-widget aktivert' : '';
+    });
+  }
+  const addWeatherBtn = document.getElementById('addWeatherBtn');
+  if(addWeatherBtn){
+    addWeatherBtn.addEventListener('click', () => {
+      localStorage.setItem('sx_weather_enabled','true');
+      updateWeather();
+      if(weatherMsg) weatherMsg.textContent = '🌦️ Demo: Vær-widget lagt til (ikke aktiv ennå)';
+    });
+  }
+  updateWeather();
+
   updateStatusPanel();
 });
 

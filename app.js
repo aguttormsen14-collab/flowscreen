@@ -209,12 +209,14 @@ function showAdsOverlay(){
   layer.classList.add('show');
   layer.classList.remove('hidden');
   adsRunning = true;
+  showAdsTapCatcher();
 }
 
 function hideAdsOverlay(){
   const layer = ensureAdsLayer();
   layer.classList.remove('show');
   adsRunning = false;
+  hideAdsTapCatcher();
 }
 
 const IDLE_TIMEOUT_MS = 30000;
@@ -256,6 +258,21 @@ function isPassiveScreen(id) {
   return id === "idle" || id === "ads" || id === "ad" || (id && id.includes("reklame"));
 }
 
+// helpers for ad tap catcher
+function showAdsTapCatcher(){
+  const el = document.getElementById("adsTapCatcher");
+  if (!el) return;
+  el.classList.remove("hidden");
+  el.style.pointerEvents = "auto";
+}
+function hideAdsTapCatcher(){
+  const el = document.getElementById("adsTapCatcher");
+  if (!el) return;
+  el.classList.add("hidden");
+  el.style.pointerEvents = "none";
+}
+function stopAdsIfRunning(){ if(adsRunning && typeof stopAds==='function') stopAds(); }
+
 function recordTouch() {
   const ts = Date.now();
   try { localStorage.setItem('sx_last_touch_ts', String(ts)); } catch(e){/*ignore*/}
@@ -288,6 +305,7 @@ function updateTouchHintVisibility() {
 let welcomeOverlayEl = null;
 function showWelcomeOverlay() {
   if (!welcomeOverlayEl) return;
+  hideAdsTapCatcher();
   welcomeOverlayEl.classList.remove('hidden');
   requestAnimationFrame(() => welcomeOverlayEl.classList.add('visible'));
 }
@@ -1269,6 +1287,7 @@ function cleanupVideoPlayback(){
 function nextAd(){
   if(!ADS.length) {
     hideAdsOverlay();
+    hideAdsTapCatcher();
     return showIdleBackground();
   }
   adIndex = (adIndex + 1) % ADS.length;
@@ -1408,6 +1427,35 @@ function init(){
   // setup onboarding UI elements
   createTouchHint();
   createWelcomeOverlay();
+  // create tap catcher early (will stay hidden until ads play)
+  const catcher = document.createElement('div');
+  catcher.id = 'adsTapCatcher';
+  catcher.className = 'ads-tap hidden';
+  catcher.style.pointerEvents = 'none';
+  document.body.appendChild(catcher);
+  catcher.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+
+    // stop any idle->ads timer if present
+    if (typeof stopIdleToAdsTimer === "function") stopIdleToAdsTimer();
+
+    // stop ads immediately
+    if (typeof stopAdsIfRunning === "function") stopAdsIfRunning();
+    try { if (typeof stopAds === "function") stopAds(); } catch(_) {}
+
+    // hide ads overlay if used
+    if (typeof hideAdsOverlay === "function") hideAdsOverlay();
+
+    // cleanup map artifacts to avoid pulse ghosts behind overlays
+    if (typeof clearMapArtifacts === "function") clearMapArtifacts();
+
+    // show Welcome overlay (C)
+    if (typeof showWelcomeOverlay === "function") {
+      showWelcomeOverlay();
+    } else {
+      console.error("[ADS TAP] showWelcomeOverlay() not found");
+    }
+  });
 
   // global tap handler (records touch, handles passive screens)
   document.addEventListener('pointerdown', (ev) => {
@@ -1415,6 +1463,7 @@ function init(){
     if (adsRunning) {
       hideAdsOverlay();
       stopAds();
+      hideAdsTapCatcher();
       showWelcomeOverlay();
       return;
     }

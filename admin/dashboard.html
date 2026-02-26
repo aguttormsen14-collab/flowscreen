@@ -29,6 +29,24 @@
     </div>
 
     <div class="grid">
+      <div class="panel col-12" id="settingsPanel">
+        <h2>Skjerminnstillinger</h2>
+        <p>Demo – velg visning</p>
+        <div class="orientation-options">
+          <label><input type="radio" name="orientation" value="landscape"> Vannrett</label>
+          <label><input type="radio" name="orientation" value="portrait"> Loddrett</label>
+        </div>
+        <div class="preview-container">
+          <div id="orientationPreview" class="preview portrait"></div>
+        </div>
+        <p id="orientationMessage" class="helper"></p>
+        <div class="weather-settings">
+          <label><input type="checkbox" id="weatherToggle"> Vis vær-widget (demo)</label>
+          <button id="addWeatherBtn" class="ads-btn">Legg til været</button>
+          <div id="weatherPreview" class="weather-preview hidden">Steinkjer – 2°C – Lett skyet</div>
+          <p id="weatherMessage" class="helper"></p>
+        </div>
+      </div>
       <div class="panel col-6">
         <h2>Installasjoner</h2>
         <p>Valgt installasjon: <strong id="currentInstall">amfi-steinkjer</strong></p>
