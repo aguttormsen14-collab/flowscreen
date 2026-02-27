@@ -3,132 +3,176 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Saxvik Admin</title>
-  <link rel="stylesheet" href="dashboard.css?v=99" />
+  <title>Saxvik Admin Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css?v=200" />
 </head>
 
-<body data-theme="saxvik-clean">
-  <div class="shell">
-    <div class="topbar">
-      <div class="logo-container">
-        <!-- Logo in white container -->
-        <img
-          id="sxLogo"
-          src=""
-          alt="Saxvik Hub"
-          class="logo"
-          data-asset-dynamic="true"
-        />
-      </div>
-      
-      <div class="title">
-        <div class="title-text">
-          <h1>Saxvik Control</h1>
-          <p>Infoskjerm Panel</p>
+<body>
+  <div class="app-shell">
+    
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-brand">
+        <img id="sxLogoSmall" src="" alt="Saxvik" class="topbar-logo" />
+        <div class="topbar-title">
+          <h1>Saxvik Hub</h1>
+          <span class="topbar-subtitle">Admin Dashboard</span>
         </div>
       </div>
-
-      <button id="logoutBtn" class="btn-secondary">↪️ Logg ut</button>
-    </div>
-
-    <div class="grid">
-      <!-- Left sidebar logo accent -->
-      <div class="sidebar-accent">
-        <svg class="logo-accent" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="sidebarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#1e7bb8;stop-opacity:0.15" />
-              <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:0.08" />
-            </linearGradient>
-          </defs>
-          <circle cx="60" cy="60" r="55" fill="url(#sidebarGrad)" stroke="#1e7bb8" stroke-width="2" opacity="0.3"/>
-          <circle cx="60" cy="60" r="50" fill="none" stroke="#1e7bb8" stroke-width="1.5" opacity="0.2"/>
-          <text x="60" y="80" font-size="60" font-weight="700" text-anchor="middle" fill="#1e7bb8" opacity="0.15">S</text>
-        </svg>
+      <div class="topbar-actions">
+        <span class="topbar-user">Admin</span>
+        <button id="logoutBtn" class="btn btn-secondary">Logg ut</button>
       </div>
+    </header>
 
-      <!-- Installasjoner - Top Left -->
-      <div class="panel col-6">
-        <h2>Installasjoner</h2>
-        <p>Valgt installasjon: <strong id="currentInstall">amfi-steinkjer</strong></p>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <img id="sxLogo" src="" alt="Saxvik Hub" class="logo" />
       </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">📺</span>
+          <span class="nav-label">Skjermer</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">📢</span>
+          <span class="nav-label">Reklame</span>
+        </a>
+      </nav>
+    </aside>
 
-      <!-- Reklame - Top Right -->
-      <div class="panel col-6">
-        <h2>Reklame</h2>
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <div class="content-wrapper">
+        
+        <!-- Page Header -->
+        <div class="page-header">
+          <h2 class="page-title">Oversikt</h2>
+          <div class="page-actions">
+            <span class="badge badge-success">
+              Installasjon: <strong id="currentInstall">amfi-steinkjer</strong>
+            </span>
+          </div>
+        </div>
 
-        <div id="adsPanel">
-          <div id="adsDropzone" class="upload-zone">
-            📤 Dra og slipp bilder/video her
-            <br />
-            <small style="opacity: 0.7;">(jpg, jpeg, png, webp, mp4)</small>
+        <!-- Content Grid -->
+        <div class="content-grid">
+          
+          <!-- Reklame Card -->
+          <div class="card card-full">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Reklamebibliotek</h3>
+                <p class="card-subtitle">Last opp og administrer reklameressurser</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="refreshAdsPanel()">
+                <span>🔄</span> Oppdater
+              </button>
+            </div>
+            
+            <div class="card-body">
+              <!-- Dropzone -->
+              <div id="adsDropzone" class="dropzone">
+                <div class="dropzone-icon">📤</div>
+                <div class="dropzone-text">
+                  <strong>Dra og slipp filer hit</strong>
+                  <span>eller klikk for å velge</span>
+                </div>
+                <div class="dropzone-types">JPG, PNG, WEBP, MP4</div>
+              </div>
+
+              <!-- Message -->
+              <p id="adsMessage" class="message"></p>
+
+              <!-- Assets List -->
+              <div id="adsList" class="assets-list"></div>
+            </div>
           </div>
 
-          <div class="ads-actions">
-            <button class="ads-btn-refresh" onclick="refreshAdsPanel()">🔄 Refresh</button>
+          <!-- Skjerminnstillinger Card -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Skjerminnstillinger</h3>
+                <p class="card-subtitle">Konfigurer orientering og visning</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="tabs">
+                <button class="tab-btn active" type="button">Skjerm 1</button>
+                <button class="tab-btn" type="button">Skjerm 2</button>
+                <button class="tab-btn" type="button">Skjerm 3</button>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">Orientering</label>
+                <div class="radio-group">
+                  <label class="radio-label">
+                    <input type="radio" name="orientation" value="landscape" />
+                    <span>Vannrett</span>
+                  </label>
+                  <label class="radio-label">
+                    <input type="radio" name="orientation" value="portrait" />
+                    <span>Loddrett</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="preview-container">
+                <div id="orientationPreview" class="preview portrait"></div>
+              </div>
+              
+              <p id="orientationMessage" class="message"></p>
+
+              <div class="form-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="weatherToggle" />
+                  <span>Vis vær-widget</span>
+                </label>
+                <button id="addWeatherBtn" class="btn btn-secondary btn-sm">Legg til været</button>
+                <div id="weatherPreview" class="weather-preview hidden">
+                  Steinkjer – 2°C – Lett skyet
+                </div>
+                <p id="weatherMessage" class="message"></p>
+              </div>
+            </div>
           </div>
 
-          <div id="adsList" class="ads-list"></div>
-          <p id="adsMessage" class="helper"></p>
-        </div>
-      </div>
+          <!-- Status Card -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Systemstatus</h3>
+                <p class="card-subtitle">Tilkoblingsinformasjon</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="statusContent">
+                <p class="text-muted">Laster statusinfo…</p>
+              </div>
+            </div>
+          </div>
 
-      <!-- Skjerminnstillinger - Half width -->
-      <div class="panel col-6" id="settingsPanel">
-        <h2>Skjerminnstillinger</h2>
-        <div class="settings-tabs">
-          <button class="tab-btn active" type="button">Skjerm1</button>
-          <button class="tab-btn" type="button">Skjerm2</button>
-          <button class="tab-btn" type="button">Skjerm3</button>
-        </div>
-        <p>Demo – velg visning</p>
-        <div class="orientation-options">
-          <label><input type="radio" name="orientation" value="landscape"> Vannrett</label>
-          <label><input type="radio" name="orientation" value="portrait"> Loddrett</label>
-        </div>
-        <div class="preview-container">
-          <div id="orientationPreview" class="preview portrait"></div>
-        </div>
-        <p id="orientationMessage" class="helper"></p>
-        <div class="weather-settings">
-          <label><input type="checkbox" id="weatherToggle"> Vis vær-widget (demo)</label>
-          <button id="addWeatherBtn" class="ads-btn">Legg til været</button>
-          <div id="weatherPreview" class="weather-preview hidden">Steinkjer – 2°C – Lett skyet</div>
-          <p id="weatherMessage" class="helper"></p>
         </div>
       </div>
+    </main>
 
-      <!-- Status - Half width -->
-      <div class="panel col-6">
-        <h2>Status</h2>
-        <div id="statusContent">
-          <p>Laster statusinfo…</p>
-        </div>
-      </div>
-    </div>
   </div>
 
-  <!-- IMPORTANT: scripts must be at end of body and in this order -->
-  
-  <!-- GitHub Pages base path detection (FIRST) -->
+  <!-- SCRIPTS -->
   <script src="../base-path.js"></script>
-  
-  <!-- Root configuration (from parent directory) -->
   <script src="../config.js"></script>
-  
-  <!-- Supabase client library from CDN (v2, before config helpers) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
-  <!-- Supabase configuration helpers (from parent directory) -->
   <script src="../supabase-config.js"></script>
-
-  <!-- Admin libraries and bootstrap -->
   <script src="./admin-ads.js"></script>
   <script src="./dashboard.js"></script>
   
-  <!-- GitHub Pages asset path fixup (uses SX_BASE_PATH from base-path.js) -->
   <script>
-    // Get install ID from URL or use default
     const params = new URLSearchParams(location.search);
     const INSTALL_ID = params.get("install") || "amfi-steinkjer";
 
@@ -136,36 +180,24 @@
       return `${window.SX_BASE_PATH || "/"}${path}`;
     }
     
-    // Apply to any element with data-asset
-    document.querySelectorAll('[data-asset]').forEach((el) => {
-      const p = el.getAttribute('data-asset');
-      if (!p) return;
-      if (el.tagName === 'IMG' || el.tagName === 'SCRIPT') el.src = asset(p);
-      else if (el.tagName === 'LINK') el.href = asset(p);
-    });
-    
-    // Load logo from correct installation path
+    // Load logos
     document.addEventListener("DOMContentLoaded", () => {
-      const img = document.getElementById("sxLogo");
-      if (img) {
-        const logoPath = `installs/${INSTALL_ID}/assets/brand/saxvik-hub/Current/saxvik-hub-logo.png`;
-        img.src = asset(logoPath);
-      }
+      const logoPath = `installs/${INSTALL_ID}/assets/brand/saxvik-hub/Current/saxvik-hub-logo.png`;
+      const logoMain = document.getElementById("sxLogo");
+      const logoSmall = document.getElementById("sxLogoSmall");
+      if (logoMain) logoMain.src = asset(logoPath);
+      if (logoSmall) logoSmall.src = asset(logoPath);
     });
   </script>
 
-  <!-- Preflight validation (verify critical scripts loaded) -->
   <script>
-    // Check that supabase-config helpers are available
     if (typeof window.getSupabaseConfig !== 'function' || typeof window.isSupabaseConfigured !== 'function') {
       const zoneEl = document.getElementById('adsDropzone');
       if (zoneEl) {
-        zoneEl.innerHTML = '❌ Mangler supabase-config.js (helpers)<br><small>Sjekk Network-fanen for 404-feil</small>';
-        zoneEl.style.color = '#dc2626';
+        zoneEl.innerHTML = '<div class="dropzone-error">❌ Mangler supabase-config.js<br><small>Sjekk Network-fanen</small></div>';
       }
       console.error('[ADMIN PREFLIGHT] supabase-config.js not loaded');
     }
-    // Check that Supabase client library loaded
     if (typeof window.supabase === 'undefined') {
       console.error('[ADMIN PREFLIGHT] Supabase client library (CDN) not loaded');
     }

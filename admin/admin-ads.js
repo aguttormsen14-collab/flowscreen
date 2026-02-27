@@ -205,19 +205,20 @@ async function renderAdsList(containerEl, messageEl) {
   ads.forEach((ad) => {
     const isVideo = ad.type === 'video';
     const thumb = isVideo
-      ? `<div style="width:60px;height:60px;background:#222;display:flex;align-items:center;justify-content:center;border-radius:8px;"><span style="color:#fff;font-size:24px;">🎬</span></div>`
-      : `<img src="${ad.publicUrl}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;" alt="${ad.name}" onerror="this.style.display='none';">`;
+      ? `<div class="asset-thumb"><div style="width:100%;height:100%;background:#1e7bb8;display:flex;align-items:center;justify-content:center;border-radius:6px;"><span style="color:#fff;font-size:28px;">🎬</span></div></div>`
+      : `<div class="asset-thumb"><img src="${ad.publicUrl}" alt="${ad.name}" onerror="this.style.display='none';"></div>`;
 
     html += `
-      <div class="ads-item">
-        <div class="ads-thumb">${thumb}</div>
-        <div class="ads-info">
-          <div class="ads-name">${ad.name}</div>
-          <div class="ads-actions">
-            <button class="ads-btn" onclick="copyAdUrl('${ad.publicUrl}', this)">📋 Kopier</button>
-            <button class="ads-btn" onclick="window.open('${ad.publicUrl}', '_blank')">🔗 Åpne</button>
-            <button class="ads-btn ads-btn-delete" onclick="deleteAdAndRefresh('${ad.path}')">🗑️ Slett</button>
-          </div>
+      <div class="asset-row">
+        ${thumb}
+        <div class="asset-info">
+          <div class="asset-name">${ad.name}</div>
+          <div class="asset-meta">${ad.type === 'video' ? 'Video' : 'Bilde'}</div>
+        </div>
+        <div class="asset-actions">
+          <button class="asset-btn" onclick="copyAdUrl('${ad.publicUrl}', this)">📋 Kopier</button>
+          <button class="asset-btn" onclick="window.open('${ad.publicUrl}', '_blank')">🔗 Åpne</button>
+          <button class="asset-btn asset-btn-delete" onclick="deleteAdAndRefresh('${ad.path}')">🗑️ Slett</button>
         </div>
       </div>
     `;
@@ -261,19 +262,19 @@ function initUploadZone(zoneEl, messageEl, onComplete) {
   zoneEl.addEventListener('dragover', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    zoneEl.classList.add('drag-active');
+    zoneEl.classList.add('is-dragover');
   });
 
   zoneEl.addEventListener('dragleave', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    zoneEl.classList.remove('drag-active');
+    zoneEl.classList.remove('is-dragover');
   });
 
   zoneEl.addEventListener('drop', async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    zoneEl.classList.remove('drag-active');
+    zoneEl.classList.remove('is-dragover');
 
     const files = e.dataTransfer?.files;
     if (!files || files.length === 0) return;
