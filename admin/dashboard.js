@@ -169,6 +169,74 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateWeather();
 
   updateStatusPanel();
+
+  // DEBUG MODE: Press D to enable/disable dragging
+  let debugMode = false;
+  let draggedEl = null;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'd' || e.key === 'D') {
+      debugMode = !debugMode;
+      document.body.classList.toggle('debug-mode', debugMode);
+      console.log(`🐛 Debug mode: ${debugMode ? 'ON' : 'OFF'}`);
+      
+      if (debugMode) {
+        // Make draggable
+        const draggables = document.querySelectorAll('.logo, .panel, .title, button');
+        draggables.forEach(el => {
+          el.style.cursor = 'grab';
+          el.addEventListener('mousedown', startDrag);
+        });
+        
+        alert('🐛 DEBUG MODE ON - Klikk og dra elementer for å flytte dem!\n\nTrykk D igjen for å slå av.');
+      } else {
+        // Remove dragging
+        const draggables = document.querySelectorAll('.logo, .panel, .title, button');
+        draggables.forEach(el => {
+          el.style.cursor = '';
+          el.removeEventListener('mousedown', startDrag);
+          el.style.position = '';
+          el.style.left = '';
+          el.style.top = '';
+        });
+      }
+    }
+  });
+
+  function startDrag(e) {
+    if (!debugMode) return;
+    draggedEl = e.target.closest('.logo, .panel, .title, button') || e.target;
+    if (!draggedEl) return;
+
+    e.preventDefault();
+    draggedEl.style.position = 'fixed';
+    draggedEl.style.zIndex = '9999';
+    draggedEl.style.cursor = 'grabbing';
+
+    const rect = draggedEl.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', stopDrag);
+  }
+
+  function drag(e) {
+    if (!draggedEl || !debugMode) return;
+    draggedEl.style.left = (e.clientX - offsetX) + 'px';
+    draggedEl.style.top = (e.clientY - offsetY) + 'px';
+  }
+
+  function stopDrag() {
+    if (draggedEl) {
+      draggedEl.style.cursor = 'grab';
+    }
+    draggedEl = null;
+    document.removeEventListener('mousemove', drag);
+    document.removeEventListener('mouseup', stopDrag);
+  }
 });
 
 // Called by Refresh button

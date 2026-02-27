@@ -538,3 +538,38 @@ body {
 
   .sidebar-accent { display: none; }
 }
+
+/* DEBUG MODE STYLES */
+body.debug-mode {
+  background-color: rgba(139, 0, 0, 0.05);
+}
+
+body.debug-mode::before {
+  content: '🐛 DEBUG MODE - Trykk D for å slå av';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(90deg, #ff6b6b, #ff8787, #ff6b6b);
+  color: white;
+  padding: 12px;
+  text-align: center;
+  font-weight: bold;
+  z-index: 99999;
+  font-size: 13px;
+  letter-spacing: 1px;
+  animation: debugPulse 2s ease-in-out infinite;
+}
+
+@keyframes debugPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+body.debug-mode .container {
+  margin-top: 44px;
+}
+
+body.debug-mode * {
+  outline: 1px dashed rgba(255, 107, 107, 0.3) !important;
+}
