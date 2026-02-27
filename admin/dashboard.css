@@ -160,8 +160,32 @@ body {
 .grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  gap: 24px;
-  padding: 40px;
+  gap: 28px;
+  padding: 48px 48px;
+  position: relative;
+}
+
+/* Sidebar accent logo */
+.sidebar-accent {
+  position: absolute;
+  left: 48px;
+  top: 120px;
+  width: 140px;
+  height: 140px;
+  opacity: 0.3;
+  pointer-events: none;
+  filter: blur(0.5px);
+}
+
+.logo-accent {
+  width: 100%;
+  height: 100%;
+  animation: logoSpin 40s linear infinite;
+}
+
+@keyframes logoSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .col-12 { grid-column: span 12; }
@@ -171,7 +195,7 @@ body {
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 32px;
+  padding: 36px;
   box-shadow: var(--shadow-md);
   position: relative;
   overflow: hidden;
@@ -193,9 +217,12 @@ body {
 .panel:hover {
   box-shadow: var(--shadow-lg);
   border-color: var(--primary);
+  transform: translateY(-4px);
 }
 
-.panel:hover::before { opacity: 1; }
+.panel:hover::before { 
+  opacity: 1; 
+}
 
 .panel h2 {
   margin: 0 0 12px 0;
@@ -435,6 +462,7 @@ body {
 @media(max-width: 1024px) {
   .col-6 { grid-column: span 12; }
   .grid { padding: 32px 24px; }
+  .sidebar-accent { display: none; }
 }
 
 @media(max-width: 768px) {
@@ -464,10 +492,12 @@ body {
   }
 
   .panel {
-    padding: 20px;
+    padding: 24px;
   }
 
   .upload-zone {
     padding: 40px 20px;
   }
+
+  .sidebar-accent { display: none; }
 }

@@ -41,29 +41,28 @@
     </div>
 
     <div class="grid">
-      <div class="panel col-12" id="settingsPanel">
-        <h2>Skjerminnstillinger</h2>
-        <p>Demo – velg visning</p>
-        <div class="orientation-options">
-          <label><input type="radio" name="orientation" value="landscape"> Vannrett</label>
-          <label><input type="radio" name="orientation" value="portrait"> Loddrett</label>
-        </div>
-        <div class="preview-container">
-          <div id="orientationPreview" class="preview portrait"></div>
-        </div>
-        <p id="orientationMessage" class="helper"></p>
-        <div class="weather-settings">
-          <label><input type="checkbox" id="weatherToggle"> Vis vær-widget (demo)</label>
-          <button id="addWeatherBtn" class="ads-btn">Legg til været</button>
-          <div id="weatherPreview" class="weather-preview hidden">Steinkjer – 2°C – Lett skyet</div>
-          <p id="weatherMessage" class="helper"></p>
-        </div>
+      <!-- Left sidebar logo accent -->
+      <div class="sidebar-accent">
+        <svg class="logo-accent" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="sidebarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#1e7bb8;stop-opacity:0.15" />
+              <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:0.08" />
+            </linearGradient>
+          </defs>
+          <circle cx="60" cy="60" r="55" fill="url(#sidebarGrad)" stroke="#1e7bb8" stroke-width="2" opacity="0.3"/>
+          <circle cx="60" cy="60" r="50" fill="none" stroke="#1e7bb8" stroke-width="1.5" opacity="0.2"/>
+          <text x="60" y="80" font-size="60" font-weight="700" text-anchor="middle" fill="#1e7bb8" opacity="0.15">S</text>
+        </svg>
       </div>
+
+      <!-- Installasjoner - Top Left -->
       <div class="panel col-6">
         <h2>Installasjoner</h2>
         <p>Valgt installasjon: <strong id="currentInstall">amfi-steinkjer</strong></p>
       </div>
 
+      <!-- Reklame - Top Right -->
       <div class="panel col-6">
         <h2>Reklame</h2>
 
@@ -83,6 +82,27 @@
         </div>
       </div>
 
+      <!-- Skjerminnstillinger - Full width below -->
+      <div class="panel col-12" id="settingsPanel">
+        <h2>Skjerminnstillinger</h2>
+        <p>Demo – velg visning</p>
+        <div class="orientation-options">
+          <label><input type="radio" name="orientation" value="landscape"> Vannrett</label>
+          <label><input type="radio" name="orientation" value="portrait"> Loddrett</label>
+        </div>
+        <div class="preview-container">
+          <div id="orientationPreview" class="preview portrait"></div>
+        </div>
+        <p id="orientationMessage" class="helper"></p>
+        <div class="weather-settings">
+          <label><input type="checkbox" id="weatherToggle"> Vis vær-widget (demo)</label>
+          <button id="addWeatherBtn" class="ads-btn">Legg til været</button>
+          <div id="weatherPreview" class="weather-preview hidden">Steinkjer – 2°C – Lett skyet</div>
+          <p id="weatherMessage" class="helper"></p>
+        </div>
+      </div>
+
+      <!-- Status - Full width at bottom -->
       <div class="panel col-12">
         <h2>Status</h2>
         <div id="statusContent">
