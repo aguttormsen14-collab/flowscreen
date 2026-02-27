@@ -39,10 +39,10 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 32px 40px;
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, #2a9fd8 100%);
+  padding: 40px 48px;
+  background: linear-gradient(135deg, #0f3d66 0%, #155389 25%, #1e7bb8 50%, #2a9fd8 75%, #1e7bb8 100%);
   color: white;
-  box-shadow: 0 12px 40px rgba(21,83,137,0.25), inset 0 1px 0 rgba(255,255,255,0.15);
+  box-shadow: 0 20px 60px rgba(15,61,102,0.4), inset 0 1px 0 rgba(255,255,255,0.15), 0 0 80px rgba(30,123,184,0.2);
   position: relative;
   overflow: hidden;
 }
@@ -50,49 +50,70 @@ body {
 .topbar::before {
   content: '';
   position: absolute;
-  top: -50%;
-  right: -10%;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+  top: -30%;
+  right: -5%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 40%, transparent 70%);
   pointer-events: none;
+  filter: blur(40px);
+}
+
+.topbar::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(42,159,216,0.1) 0%, transparent 60%);
+  pointer-events: none;
+  filter: blur(60px);
 }
 
 .title {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 32px;
   z-index: 1;
   position: relative;
 }
 
 .title h1 {
   margin: 0;
-  font-size: 32px;
-  font-weight: 800;
-  letter-spacing: -1px;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  font-size: 40px;
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  text-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  background: linear-gradient(180deg, white 0%, #e0e7ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .title p {
-  margin: 8px 0 0 0;
-  color: rgba(255,255,255,0.88);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
+  margin: 10px 0 0 0;
+  color: rgba(255,255,255,0.92);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.95;
 }
 
 .logo {
-  height: 56px;
-  width: 56px;
+  height: 96px;
+  width: 96px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.3)) drop-shadow(0 0 20px rgba(255,255,255,0.2));
   animation: logoFloat 3s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
 .logo-fallback {
-  height: 56px;
-  width: 56px;
+  height: 96px;
+  width: 96px;
   display: none;
 }
 
