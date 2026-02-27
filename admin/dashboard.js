@@ -125,6 +125,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderAdsList(listEl, msgEl);
   }
 
+  // AUDIT: Init playlist editor
+  await refreshPlaylistEditor();
+  
+  // AUDIT: Init weather settings
+  await refreshWeatherSettings();
+
   // demo orientation/weather controls
   const orientRadios = document.querySelectorAll('input[name="orientation"]');
   const previewEl = document.getElementById('orientationPreview');
@@ -322,6 +328,24 @@ async function refreshAdsPanel() {
   if (msgEl) msgEl.textContent = 'Oppdaterer…';
   if (typeof renderAdsList === 'function') await renderAdsList(listEl, msgEl);
   if (msgEl) msgEl.textContent = '';
+}
+
+// AUDIT: Refresh playlist editor
+async function refreshPlaylistEditor() {
+  const containerEl = document.getElementById('playlistEditor');
+  if (!containerEl) return;
+  if (typeof renderPlaylistEditor === 'function') {
+    await renderPlaylistEditor(containerEl);
+  }
+}
+
+// AUDIT: Refresh weather settings
+async function refreshWeatherSettings() {
+  const containerEl = document.getElementById('weatherSettings');
+  if (!containerEl) return;
+  if (typeof renderWeatherSettings === 'function') {
+    await renderWeatherSettings(containerEl);
+  }
 }
 
 async function updateStatusPanel() {

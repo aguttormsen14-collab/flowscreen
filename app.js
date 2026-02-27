@@ -1066,6 +1066,75 @@ async function loadAdsFromSupabase(){
   }
 }
 
+// AUDIT: loadPlaylist - reads playlist.json from Supabase storage
+// If exists and valid, returns ordered array of {filename, duration}
+// If missing/invalid, returns null (fallback to all files)
+async function loadPlaylist() {
+  try {
+    const supabase = getSupabase();
+    if (!supabase) return null;
+    
+    const cfg = window.getSupabaseConfig();
+    const playlistPath = `installs/${cfg.installSlug}/assets/ads/playlist.json`;
+    
+    // GUARD: attempt to read playlist.json as text
+    const { data, error } = await supabase.storage
+      .from(cfg.bucket || 'saxvik-hub')
+      .download(playlistPath);
+    
+    if (error || !data) {
+      console.log('[PLAYLIST] Not found or error:', error?.message);
+      return null;
+    }
+    
+    const text = await data.text();
+    const playlist = JSON.parse(text);
+    
+    // GUARD: validate structure
+    if (!Array.isArray(playlist.items) || playlist.items.length === 0) {
+      console.warn('[PLAYLIST] Invalid format:', playlist);
+      return null;
+    }
+    
+    console.log('[PLAYLIST] Loaded:', playlist.items.length, 'items');
+    return playlist;
+  } catch (e) {
+    console.warn('[PLAYLIST] Load error (fallback to all files):', e.message);
+    return null;
+  }
+}
+
+// AUDIT: applyPlaylist - reorders/filters ADS array based on playlist
+// Only keeps ads that match playlist items; respects order and duration
+function applyPlaylist(allAds, playlist) {
+  try {
+    if (!playlist || !playlist.items) return allAds; // fallback
+    
+    const result = [];
+    for (const item of playlist.items) {
+      const match = allAds.find(ad => ad.filename === item.filename);
+      if (match) {
+        // GUARD: respect duration stored in playlist (default 8s if not set)
+        const duration = item.duration || 8000;
+        result.push({ ...match, duration });
+      } else {
+        console.warn('[PLAYLIST] File not found:', item.filename);
+      }
+    }
+    
+    if (result.length === 0) {
+      console.warn('[PLAYLIST] No matching files found in ads folder');
+      return allAds; // fallback to all
+    }
+    
+    console.log('[PLAYLIST] Applied:', result.length, 'ads in playlist order');
+    return result;
+  } catch (e) {
+    console.warn('[PLAYLIST] Apply error:', e.message);
+    return allAds; // fallback
+  }
+}
+
 // buildAds fetches the list of media files from Supabase storage and populates ADS
 async function buildAds(){
   ADS = [];
@@ -1078,11 +1147,25 @@ async function buildAds(){
   const prefix = getAdsPrefix(cfg);
   console.log('[ADS] prefix:', prefix);
   const list = await listAdsFromSupabase(cfg);
-  ADS = list.map(item => ({ src: item.publicUrl, isVideo: item.isVideo, mime: item.mime }));
-  console.log('[ADS] found:', ADS.length);
-  if(ADS.length === 0){
+  
+  // AUDIT: Convert list items to ad objects with filename tracking
+  const allAds = list.map(item => ({ 
+    src: item.publicUrl, 
+    isVideo: item.isVideo, 
+    mime: item.mime,
+    filename: item.name  // Track original filename for playlist matching
+  }));
+  console.log('[ADS] found:', allAds.length);
+  
+  if(allAds.length === 0){
     console.warn('[ADS] No files found at:', prefix);
+    ADS = [];
+    return;
   }
+  
+  // AUDIT: Try to load and apply playlist
+  const playlist = await loadPlaylist();
+  ADS = playlist ? applyPlaylist(allAds, playlist) : allAds;
 }
 
 async function pollAdsAndReloadIfChanged(){
@@ -1446,7 +1529,9 @@ function showAdByIndex(i){
     img.src = ad.src;
     layer.appendChild(img);
     if(adTimer) clearTimeout(adTimer);
-    adTimer = setTimeout(nextAd, AD_DURATION_MS);
+    // AUDIT: Use per-ad duration if set by playlist, else fallback to default
+    const duration = ad.duration || AD_DURATION_MS;
+    adTimer = setTimeout(nextAd, duration);
   }
 }
 

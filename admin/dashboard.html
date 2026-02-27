@@ -143,6 +143,39 @@
             </div>
           </div>
 
+          <!-- Spilling (Playlist) Card -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Reklamespilling</h3>
+                <p class="card-subtitle">Administrer rekkefølge og varighet</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="refreshPlaylistEditor()">
+                <span>🔄</span> Oppdater
+              </button>
+            </div>
+            <div class="card-body">
+              <div id="playlistEditor" style="min-height: 200px;">
+                <p style="color: var(--text-muted); font-size: 12px;">Laster…</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Værinnstillinger Card -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Værinnstillinger</h3>
+                <p class="card-subtitle">Konfigurer værdisplay på kioskene</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="weatherSettings" style="min-height: 150px;">
+                <p style="color: var(--text-muted); font-size: 12px;">Laster…</p>
+              </div>
+            </div>
+          </div>
+
           <!-- Status Card -->
           <div class="card">
             <div class="card-header">

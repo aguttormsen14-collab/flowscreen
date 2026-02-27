@@ -114,6 +114,55 @@ async function loadAds() {
   }
 }
 
+// AUDIT: Load playlist.json from storage
+// Returns null if missing or invalid
+async function loadPlaylist() {
+  try {
+    const supabase = getSupabase();
+    if (!supabase) return null;
+    const cfg = getCfg();
+    const playlistPath = `installs/${cfg.installSlug}/assets/ads/playlist.json`;
+    
+    const { data, error } = await supabase.storage
+      .from(cfg.bucket)
+      .download(playlistPath);
+    
+    if (error || !data) {
+      console.log('[PLAYLIST] Not found:', error?.message);
+      return null;
+    }
+    
+    const text = await data.text();
+    return JSON.parse(text);
+  } catch (e) {
+    console.warn('[PLAYLIST] Load error:', e.message);
+    return null;
+  }
+}
+
+// AUDIT: Save playlist.json to storage
+async function savePlaylist(playlist) {
+  try {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error('Supabase not ready');
+    
+    const cfg = getCfg();
+    const playlistPath = `installs/${cfg.installSlug}/assets/ads/playlist.json`;
+    const json = JSON.stringify(playlist, null, 2);
+    
+    const { error } = await supabase.storage
+      .from(cfg.bucket)
+      .update(playlistPath, new Blob([json], { type: 'application/json' }), { upsert: true });
+    
+    if (error) throw error;
+    console.log('[PLAYLIST] Saved');
+    return true;
+  } catch (e) {
+    console.error('[PLAYLIST] Save error:', e.message);
+    return false;
+  }
+}
+
 /** Upload files to storage */
 async function uploadFiles(fileList, onProgress) {
   const supabase = getSupabase();
@@ -309,4 +358,149 @@ function initUploadZone(zoneEl, messageEl, onComplete) {
   zoneEl.appendChild(input);
   zoneEl.addEventListener('click', () => input.click());
   zoneEl.style.cursor = 'pointer';
+}
+
+// AUDIT: Render playlist editor UI
+async function renderPlaylistEditor(containerEl) {
+  if (!containerEl) return;
+  
+  const ads = await loadAds();
+  const playlist = await loadPlaylist();
+  const playlistItems = playlist?.items || [];
+  
+  let html = '<div style="padding: 16px; background: var(--bg); border-radius: 8px;">';
+  html += '<h3 style="margin-top: 0; margin-bottom: 12px;">Spilling listeeditor</h3>';
+  html += '<p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">Velg hvilke filer som skal spilles, i hvilken rekkefølge</p>';
+  
+  if (ads.length === 0) {
+    html += '<p style="color: var(--text-muted);">Ingen reklamer lastet opp ennå</p>';
+    containerEl.innerHTML = html + '</div>';
+    return;
+  }
+  
+  // Build list with checkboxes and order
+  html += '<div id="playlistItems" style="display: flex; flex-direction: column; gap: 8px;">';
+  
+  for (let i = 0; i < ads.length; i++) {
+    const ad = ads[i];
+    const playlistItem = playlistItems.find(p => p.filename === ad.name);
+    const isChecked = !!playlistItem;
+    const duration = playlistItem?.duration || 8000;
+    
+    html += `
+      <div class="playlist-item" style="display: flex; gap: 12px; align-items: center; padding: 10px; background: white; border-radius: 6px; border: 1px solid var(--border);">
+        <input type="checkbox" class="playlist-checkbox" data-filename="${ad.name}" ${isChecked ? 'checked' : ''} style="cursor: pointer;">
+        <span style="flex: 1; font-size: 14px;">${ad.name}</span>
+        <input type="number" class="playlist-duration" data-filename="${ad.name}" value="${duration / 1000}" min="1" max="60" style="width: 60px; padding: 6px; border: 1px solid var(--border); border-radius: 4px;" placeholder="Sek.">
+        <span style="font-size: 12px; color: var(--text-muted);">sek</span>
+      </div>
+    `;
+  }
+  
+  html += '</div>';
+  html += '<button id="savePlaylistBtn" class="btn btn-primary" style="margin-top: 12px; width: 100%;">Lagre spilling</button>';
+  html += '</div>';
+  
+  containerEl.innerHTML = html;
+  
+  // Bind save button
+  const saveBtn = containerEl.querySelector('#savePlaylistBtn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+      const items = [];
+      containerEl.querySelectorAll('.playlist-checkbox:checked').forEach(cb => {
+        const filename = cb.dataset.filename;
+        const durationInput = containerEl.querySelector(`.playlist-duration[data-filename="${filename}"]`);
+        const duration = (parseInt(durationInput.value) || 8) * 1000;
+        items.push({ filename, duration });
+      });
+      
+      const newPlaylist = { items };
+      const success = await savePlaylist(newPlaylist);
+      if (success) {
+        alert('✅ Spilling lagret!');
+      } else {
+        alert('❌ Feil ved lagring av spilling');
+      }
+    });
+  }
+}
+
+// AUDIT: Render weather settings editor
+async function renderWeatherSettings(containerEl) {
+  if (!containerEl) return;
+  
+  let html = '<div style="padding: 16px; background: var(--bg); border-radius: 8px;">';
+  html += '<h3 style="margin-top: 0; margin-bottom: 8px;">Værinnstillinger</h3>';
+  html += '<p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">Konfigurer værdisplay på kioskene</p>';
+  html += `
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <input type="checkbox" id="weatherEnabled" style="cursor: pointer;" />
+        <span>Aktiver værdisplay</span>
+      </label>
+      <div>
+        <label style="display: block; margin-bottom: 4px; font-size: 13px;">Lokasjon:</label>
+        <input id="weatherLocation" type="text" placeholder="F.eks. Trondheim, NO" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px;">
+      </div>
+      <button id="saveWeatherBtn" class="btn btn-primary" style="width: 100%;">Lagre værinnstillinger</button>
+      <p style="font-size: 12px; color: var(--text-muted); margin: 0;">💡 Tipp: Været hentes fra API når aktivert</p>
+    </div>
+  `;
+  html += '</div>';
+  
+  containerEl.innerHTML = html;
+  
+  // Load current settings
+  try {
+    const supabase = getSupabase();
+    if (supabase) {
+      const cfg = getCfg();
+      const settingsPath = `installs/${cfg.installSlug}/assets/settings.json`;
+      const { data, error } = await supabase.storage.from(cfg.bucket).download(settingsPath);
+      
+      if (!error && data) {
+        const text = await data.text();
+        const settings = JSON.parse(text);
+        if (settings.weather) {
+          document.getElementById('weatherEnabled').checked = settings.weather.enabled;
+          document.getElementById('weatherLocation').value = settings.weather.location || 'Trondheim, NO';
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[WEATHER] Load error:', e.message);
+  }
+  
+  // Bind save button
+  const saveBtn = containerEl.querySelector('#saveWeatherBtn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+      try {
+        const supabase = getSupabase();
+        if (!supabase) throw new Error('Supabase not ready');
+        
+        const cfg = getCfg();
+        const enabled = document.getElementById('weatherEnabled').checked;
+        const location = document.getElementById('weatherLocation').value || 'Trondheim, NO';
+        
+        const settings = {
+          weather: { enabled, location }
+        };
+        
+        const settingsPath = `installs/${cfg.installSlug}/assets/settings.json`;
+        const json = JSON.stringify(settings, null, 2);
+        
+        const { error } = await supabase.storage
+          .from(cfg.bucket)
+          .update(settingsPath, new Blob([json], { type: 'application/json' }), { upsert: true });
+        
+        if (error) throw error;
+        alert('✅ Værinnstillinger lagret!');
+      } catch (e) {
+        console.error('[WEATHER] Save error:', e);
+        alert('❌ Feil ved lagring av værinnstillinger');
+      }
+    });
+  }
 }
