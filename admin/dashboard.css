@@ -188,7 +188,7 @@ body {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   gap: 24px;
-  padding: 24px 56px 40px 600px;
+  padding: 24px 48px 40px 520px;
   position: relative;
   background: linear-gradient(135deg, #f8fafc 0%, #f0f4f8 100%);
   min-height: 100vh;
