@@ -3,6 +3,8 @@ html, body {
   margin: 0;
   background: black;
   overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
 }
 
 #app {

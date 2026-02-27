@@ -110,6 +110,20 @@ function isAdsScreen(id) {
 let DEBUG = false; // runtime-toggleable debug flag
 let editMode = false; // true while ArrowDown is held
 
+// demo fullscreen (Android tablet, non-kiosk) - safe, one-time attempt
+let demoFullscreenArmed = true;
+function demoLog(msg){ if (DEBUG) console.log(msg); }
+function tryDemoFullscreenOnce(){
+  if (!demoFullscreenArmed) return;
+  if (currentScreen !== "idle") return;
+  demoFullscreenArmed = false;
+  const el = document.documentElement;
+  if (!document.fullscreenElement && el && el.requestFullscreen) {
+    el.requestFullscreen().then(() => demoLog("[DEMO] fullscreen ok"))
+      .catch(() => demoLog("[DEMO] fullscreen failed"));
+  }
+}
+
 // Install loader (select which install's assets to use)
 const params = new URLSearchParams(location.search);
 const INSTALL_ID = params.get("install") || "amfi-steinkjer";
@@ -1488,6 +1502,7 @@ function init(){
 
   // global tap handler for non-hotspot taps (reaches when no stopPropagation)
   document.addEventListener('pointerdown', (ev) => {
+    tryDemoFullscreenOnce();
     recordTouch();
     
     // Reset idle timer on any tap that reaches here
