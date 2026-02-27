@@ -39,20 +39,20 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 24px;
+  gap: 0;
   padding: 0;
-  background: linear-gradient(135deg, #061629 0%, #0a2240 15%, #0d3c6e 30%, #1a5a9f 45%, #2570b8 60%, #2a9fd8 75%, #1e7bb8 90%, #155389 100%);
+  background: linear-gradient(90deg, #0a1f2e 0%, #0d3c6e 20%, #1a5a9f 35%, #2570b8 50%, #2a9fd8 65%, #1e7bb8 80%, #155389 100%);
   color: white;
-  box-shadow: 0 0 80px rgba(42,159,216,0.4), 0 30px 100px rgba(10,31,46,0.6), inset 0 1px 0 rgba(255,255,255,0.15), 0 0 200px rgba(30,123,184,0.25);
+  box-shadow: 0 0 100px rgba(42,159,216,0.5), 0 40px 120px rgba(10,31,46,0.7), inset 0 1px 0 rgba(255,255,255,0.2), 0 0 250px rgba(30,123,184,0.35), inset 0 -40px 60px rgba(0,0,0,0.15);
   position: relative;
   overflow: visible;
   height: 220px;
-  animation: topbarGlow 8s ease-in-out infinite;
+  animation: topbarGlow 7s ease-in-out infinite;
 }
 
 @keyframes topbarGlow {
-  0%, 100% { box-shadow: 0 0 80px rgba(42,159,216,0.4), 0 30px 100px rgba(10,31,46,0.6), inset 0 1px 0 rgba(255,255,255,0.15), 0 0 200px rgba(30,123,184,0.25); }
-  50% { box-shadow: 0 0 120px rgba(42,159,216,0.6), 0 30px 100px rgba(10,31,46,0.8), inset 0 1px 0 rgba(255,255,255,0.2), 0 0 250px rgba(30,123,184,0.4); }
+  0%, 100% { box-shadow: 0 0 100px rgba(42,159,216,0.5), 0 40px 120px rgba(10,31,46,0.7), inset 0 1px 0 rgba(255,255,255,0.2), 0 0 250px rgba(30,123,184,0.35), inset 0 -40px 60px rgba(0,0,0,0.15); }
+  50% { box-shadow: 0 0 160px rgba(42,159,216,0.7), 0 40px 120px rgba(10,31,46,0.9), inset 0 1px 0 rgba(255,255,255,0.25), 0 0 320px rgba(30,123,184,0.5), inset 0 -40px 60px rgba(0,0,0,0.2); }
 }
 
 .topbar::before {
@@ -90,14 +90,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 320px;
+  width: 280px;
   height: 220px;
-  background: linear-gradient(135deg, #ffffff 0%, #f0f4f8 50%, #e8f0f7 100%);
-  border-radius: 0 40px 40px 0;
-  box-shadow: 0 25px 80px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.95), 0 0 80px rgba(42,159,216,0.5), inset 0 -4px 12px rgba(0,0,0,0.08);
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
   z-index: 10;
   position: relative;
-  backdrop-filter: blur(20px);
+  backdrop-filter: none;
 }
 
 .title {
@@ -130,10 +130,10 @@ body {
 }
 
 .logo {
-  height: 240px;
-  width: 240px;
+  height: 280px;
+  width: 280px;
   object-fit: contain;
-  filter: drop-shadow(0 12px 32px rgba(30,123,184,0.25)) drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+  filter: drop-shadow(0 16px 40px rgba(0,0,0,0.3)) drop-shadow(0 0 60px rgba(255,255,255,0.15));
   flex-shrink: 0;
   animation: logoFloat 3.5s ease-in-out infinite;
 }
