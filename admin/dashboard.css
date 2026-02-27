@@ -708,6 +708,38 @@ body {
   color: #6b7280;
 }
 
+.settings-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0 12px 0;
+}
+
+.tab-btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.tab-btn:hover {
+  border-color: #bfd3e8;
+  color: #0f172a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.tab-btn.active {
+  background: #e8f2fb;
+  border-color: #9ec5e6;
+  color: #0f172a;
+}
+
 .upload-zone {
   border: 2px dashed #c7d2e0;
   border-radius: 14px;
