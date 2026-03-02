@@ -43,26 +43,46 @@ window.getSupabaseConfig = function() {
 };
 
 // Create a single Supabase client instance (singleton)
-// window.supabase = CDN library (with createClient method)
-// window.supabaseClient = actual client instance
+// After initialization:
+// - window.supabaseLib = CDN library (with createClient method)
+// - window.supabase = client instance (for legacy app.js compatibility, has .storage/.auth)
+// - window.supabaseClient = same as window.supabase (alias)
 (function initSupabaseClientSingleton() {
   function attempt() {
-    if (!window.isSupabaseConfigured()) return false;
+    const cfg = window.getSupabaseConfig();
+    if (!cfg) {
+      console.error('[SUPABASE] Configuration missing, cannot initialize client');
+      return false;
+    }
 
     // nothing to do until the CDN library is available
-    if (!window.supabase) return false;
+    if (!window.supabaseLib && !window.supabase) {
+      // supabase is the library when loaded by CDN
+      if (typeof window.supabase === 'object' && typeof window.supabase.createClient === 'function') {
+        // store library reference (CDN just loaded)
+      } else {
+        return false;
+      }
+    }
 
     // if client already exists, we're done
     if (window.supabaseClient) {
-      console.log('[supabase-config] client already exists');
       return true;
     }
 
     // if the CDN library is loaded, create the client now
-    if (typeof window.supabase.createClient === 'function') {
-      const cfg = window.getSupabaseConfig();
-      window.supabaseClient = window.supabase.createClient(cfg.url, cfg.anonKey);
-      console.log('[supabase-config] client created');
+    const lib = window.supabaseLib || window.supabase;
+    if (lib && typeof lib.createClient === 'function') {
+      const client = lib.createClient(cfg.url, cfg.anonKey);
+      
+      // Store library reference (for grhs library access if needed)
+      window.supabaseLib = lib;
+      
+      // Create client and expose via multiple names for compatibility
+      window.supabaseClient = client;
+      window.supabase = client;  // legacy compatibility for app.js
+      
+      console.log('[SUPABASE] Initialized client');
       return true;
     }
 
