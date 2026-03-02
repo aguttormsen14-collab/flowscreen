@@ -2,11 +2,11 @@
  * supabase-config.js — Helper functions for Supabase configuration
  * 
  * This file provides helper functions to get Supabase config and check if it's ready.
- * It requires that config.js has already been loaded to set:
- *   - window.SUPABASE_URL
- *   - window.SUPABASE_ANON_KEY
- *   - window.SUPABASE_BUCKET (optional)
- *   - window.DEFAULT_INSTALL_SLUG (optional)
+ * It requires that config.js has already been loaded to set window.CONFIG with:
+ *   - SUPABASE_URL
+ *   - SUPABASE_ANON_KEY
+ *   - SUPABASE_BUCKET (optional)
+ *   - DEFAULT_INSTALL_SLUG (optional)
  */
 
 /**
@@ -14,7 +14,8 @@
  * @returns {boolean} true if all required credentials are present
  */
 window.isSupabaseConfigured = function() {
-  return !!(window.SUPABASE_URL && window.SUPABASE_ANON_KEY);
+  const cfg = window.SUPABASE_CONFIG || window.CONFIG;
+  return !!(cfg && cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY);
 };
 
 /**
@@ -22,8 +23,10 @@ window.isSupabaseConfigured = function() {
  * @returns {Object|null} Config object with url, anonKey, bucket, installSlug, or null if not configured
  */
 window.getSupabaseConfig = function() {
-  if (!window.isSupabaseConfigured()) {
-    console.warn('[supabase-config] Supabase not configured');
+  const cfg = window.SUPABASE_CONFIG || window.CONFIG;
+  
+  if (!cfg || !cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) {
+    console.error('[supabase-config] Missing Supabase credentials. url:', !!cfg?.SUPABASE_URL, 'key:', !!cfg?.SUPABASE_ANON_KEY);
     return null;
   }
 
@@ -32,10 +35,10 @@ window.getSupabaseConfig = function() {
   const installOverride = params.get('install');
 
   return {
-    url: window.SUPABASE_URL,
-    anonKey: window.SUPABASE_ANON_KEY,
-    bucket: window.SUPABASE_BUCKET || 'saxvik-hub',
-    installSlug: installOverride || window.DEFAULT_INSTALL_SLUG || 'amfi-steinkjer'
+    url: cfg.SUPABASE_URL,
+    anonKey: cfg.SUPABASE_ANON_KEY,
+    bucket: cfg.SUPABASE_BUCKET || 'saxvik-hub',
+    installSlug: installOverride || cfg.DEFAULT_INSTALL_SLUG || 'amfi-steinkjer'
   };
 };
 

@@ -11,7 +11,7 @@
 //   1. Use repository secrets to inject credentials via a build step
 //   2. OR load credentials from a secure endpoint at runtime
 
-if (typeof window.SUPABASE_URL === 'undefined' || window.SUPABASE_URL.includes('YOUR_PROJECT_ID')) {
+if (!window.CONFIG || !window.CONFIG.SUPABASE_URL || window.CONFIG.SUPABASE_URL.includes('YOUR_PROJECT_ID')) {
   console.error(
     '[CONFIG] Supabase credentials not configured. ' +
     'Copy config.js.example to config.local.js and fill in your values. ' +
