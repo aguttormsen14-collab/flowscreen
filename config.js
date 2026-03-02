@@ -11,6 +11,16 @@
 //   1. Use repository secrets to inject credentials via a build step
 //   2. OR load credentials from a secure endpoint at runtime
 
+// Fallback config if config.local.js doesn't load
+if (!window.CONFIG) {
+  window.CONFIG = {
+    SUPABASE_URL: "https://bhunptoiypamybwgpfoz.supabase.co",
+    SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJodW5wdG9peXBhbXlid2dwZm96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwODkzMzMsImV4cCI6MjA4NzY2NTMzM30.nQzSxxP9MH2x5tSeA-t-ZSaYZ_OK8ni8kjvnZjdQ7Sc",
+    SUPABASE_BUCKET: "saxvik-hub",
+    DEFAULT_INSTALL_SLUG: "amfi-steinkjer"
+  };
+}
+
 if (!window.CONFIG || !window.CONFIG.SUPABASE_URL || window.CONFIG.SUPABASE_URL.includes('YOUR_PROJECT_ID')) {
   console.error(
     '[CONFIG] Supabase credentials not configured. ' +
