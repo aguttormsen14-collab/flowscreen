@@ -675,12 +675,46 @@ body {
 }
 
 /* ===== SCREEN EDITOR ===== */
-.screen-editor-toolbar {
+.screen-editor-toolbar-panel {
+  display: grid;
+  gap: var(--space-sm);
+  width: min(920px, 100%);
+}
+
+.screen-editor-toolbar-group {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.screen-editor-group-title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.screen-editor-toolbar-row {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
   align-items: center;
-  padding: 0;
+}
+
+.screen-editor-shell {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+  align-items: start;
+}
+
+.screen-editor-shell.with-detail {
+  grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr);
 }
 
 .screen-editor-select {
@@ -698,7 +732,7 @@ body {
 .screen-editor-stage {
   position: relative;
   width: 100%;
-  min-height: 400px;
+  min-height: 460px;
   max-height: 600px;
   margin-top: 0;
   border: 2px solid var(--border);
@@ -714,6 +748,12 @@ body {
 
 .screen-editor-stage.screen-editor-stage-panning {
   cursor: grabbing;
+}
+
+.screen-editor-detail-panel {
+  margin-top: 0;
+  position: sticky;
+  top: 12px;
 }
 
 .screen-editor-image {
@@ -972,6 +1012,15 @@ body {
 }
 
 @media (max-width: 900px) {
+  .screen-editor-shell,
+  .screen-editor-shell.with-detail {
+    grid-template-columns: 1fr;
+  }
+
+  .screen-editor-detail-panel {
+    position: static;
+  }
+
   .popup-upload-grid {
     grid-template-columns: 1fr;
   }

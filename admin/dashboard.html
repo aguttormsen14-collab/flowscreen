@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Saxvik Admin Dashboard</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b4f8a'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-size='34' fill='white' font-family='Arial,sans-serif'%3ES%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="dashboard.css?v=212" />
+  <link rel="stylesheet" href="dashboard.css?v=213" />
 </head>
 
 <body>
@@ -39,6 +39,10 @@
         <a href="#" class="nav-item" data-dashboard-module="screens" data-module-title="Skjermstyring">
           <span class="nav-icon">📺</span>
           <span class="nav-label">Skjermstyring</span>
+        </a>
+        <a href="#" class="nav-item" data-dashboard-module="wayfinder" data-module-title="Wayfinder Editor">
+          <span class="nav-icon">🗺️</span>
+          <span class="nav-label">Wayfinder Editor</span>
         </a>
         <a href="#" class="nav-item" data-dashboard-module="ads" data-module-title="Reklamestyring">
           <span class="nav-icon">📢</span>
@@ -233,40 +237,58 @@
           </div>
 
           <!-- Skjermeditor Card -->
-          <div class="card card-full" data-modules="screens">
+          <div class="card card-full" data-modules="wayfinder">
             <div class="card-header">
               <div>
-                <h3 class="card-title">Skjermeditor</h3>
-                <p class="card-subtitle">Rediger hotspots i forhåndsvisningen – lagres automatisk</p>
+                <h3 class="card-title">Wayfinder Skjermredigering</h3>
+                <p class="card-subtitle">Klikk, dra og juster hotspots/pulses med autosave</p>
               </div>
-              <div class="screen-editor-toolbar">
-                <select id="screenEditorSelect" class="screen-editor-select"></select>
-                <select id="screenEditorClickMode" class="screen-editor-select" title="Klikkmodus i forhåndsvisning">
-                  <option value="select">Klikkmodus: Velg</option>
-                  <option value="hotspot-nav">Klikkmodus: Hotspot → side</option>
-                  <option value="hotspot-popup">Klikkmodus: Hotspot → popup</option>
-                  <option value="pulse">Klikkmodus: Pulse</option>
-                </select>
-                <select id="screenEditorClickTarget" class="screen-editor-select hidden" title="Målside for nye hotspot-navigationer"></select>
-                <button id="screenEditorZoomOutBtn" class="btn btn-secondary btn-sm" type="button">Zoom -</button>
-                <button id="screenEditorZoomResetBtn" class="btn btn-secondary btn-sm" type="button">100%</button>
-                <button id="screenEditorZoomInBtn" class="btn btn-secondary btn-sm" type="button">Zoom +</button>
-                <button id="screenEditorAddHotspotBtn" class="btn btn-secondary btn-sm" type="button">Ny hotspot</button>
-                <button id="screenEditorDeleteHotspotBtn" class="btn btn-secondary btn-sm" type="button">Slett valgt hotspot</button>
-                <button id="screenEditorAddPulseBtn" class="btn btn-secondary btn-sm" type="button">Ny pulse</button>
-                <button id="screenEditorAddPulseFromHotspotBtn" class="btn btn-secondary btn-sm" type="button">Pulse fra valgt hotspot</button>
-                <button id="screenEditorDeletePulseBtn" class="btn btn-secondary btn-sm" type="button">Slett valgt pulse</button>
-                <button id="screenEditorReloadBtn" class="btn btn-secondary btn-sm" type="button">Last inn på nytt</button>
-                <button id="screenEditorSaveBtn" class="btn btn-primary btn-sm" type="button">Lagre nå</button>
+              <div class="screen-editor-toolbar-panel">
+                <div class="screen-editor-toolbar-group">
+                  <p class="screen-editor-group-title">Visning</p>
+                  <div class="screen-editor-toolbar-row">
+                    <select id="screenEditorSelect" class="screen-editor-select"></select>
+                    <button id="screenEditorZoomOutBtn" class="btn btn-secondary btn-sm" type="button">Zoom -</button>
+                    <button id="screenEditorZoomResetBtn" class="btn btn-secondary btn-sm" type="button">100%</button>
+                    <button id="screenEditorZoomInBtn" class="btn btn-secondary btn-sm" type="button">Zoom +</button>
+                  </div>
+                </div>
+
+                <div class="screen-editor-toolbar-group">
+                  <p class="screen-editor-group-title">Klikkmodus</p>
+                  <div class="screen-editor-toolbar-row">
+                    <select id="screenEditorClickMode" class="screen-editor-select" title="Klikkmodus i forhåndsvisning">
+                      <option value="select">Velg / flytt eksisterende</option>
+                      <option value="hotspot-nav">Opprett hotspot → side</option>
+                      <option value="hotspot-popup">Opprett hotspot → popup</option>
+                      <option value="pulse">Opprett pulse</option>
+                    </select>
+                    <select id="screenEditorClickTarget" class="screen-editor-select hidden" title="Målside for nye hotspot-navigationer"></select>
+                  </div>
+                </div>
+
+                <div class="screen-editor-toolbar-group">
+                  <p class="screen-editor-group-title">Verktøy</p>
+                  <div class="screen-editor-toolbar-row">
+                    <button id="screenEditorAddHotspotBtn" class="btn btn-secondary btn-sm" type="button">Ny hotspot</button>
+                    <button id="screenEditorAddPulseBtn" class="btn btn-secondary btn-sm" type="button">Ny pulse</button>
+                    <button id="screenEditorAddPulseFromHotspotBtn" class="btn btn-secondary btn-sm" type="button">Pulse fra valgt hotspot</button>
+                    <button id="screenEditorDeleteHotspotBtn" class="btn btn-secondary btn-sm" type="button">Slett valgt hotspot</button>
+                    <button id="screenEditorDeletePulseBtn" class="btn btn-secondary btn-sm" type="button">Slett valgt pulse</button>
+                    <button id="screenEditorReloadBtn" class="btn btn-secondary btn-sm" type="button">Last inn på nytt</button>
+                    <button id="screenEditorSaveBtn" class="btn btn-primary btn-sm" type="button">Lagre nå</button>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="card-body">
+              <div class="screen-editor-shell">
               <p id="screenEditorStatus" class="message">Laster editor…</p>
               <div id="screenEditorStage" class="screen-editor-stage">
                 <p id="screenEditorEmpty" class="text-muted">Ingen skjerm valgt</p>
               </div>
 
-              <div id="screenEditorHotspotPanel" class="settings-panel hidden">
+              <div id="screenEditorHotspotPanel" class="settings-panel screen-editor-detail-panel hidden">
                 <h4 class="settings-panel-title">Valgt hotspot</h4>
                 <div class="form-group">
                   <label class="form-label" for="screenEditorHotspotName">Navn</label>
@@ -319,6 +341,7 @@
                     <p class="message">Tips: Dra logo og tekst i preview for å plassere dem slik du vil.</p>
                   </div>
                 </div>
+              </div>
               </div>
             </div>
           </div>
@@ -395,7 +418,7 @@
   <script src="../supabase-config.js"></script>
   <script src="./admin-auth-supabase.js"></script>
   <script src="./admin-ads.js"></script>
-  <script src="./dashboard.js?v=212"></script>
+  <script src="./dashboard.js?v=213"></script>
   
   <script>
     const params = new URLSearchParams(location.search);

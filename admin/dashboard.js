@@ -950,6 +950,7 @@ function bindPopupPreviewDrag(element, part) {
 }
 
 function renderSelectedHotspotPanel() {
+  const shellEl = document.querySelector('.screen-editor-shell');
   const panelEl = document.getElementById('screenEditorHotspotPanel');
   const nameEl = document.getElementById('screenEditorHotspotName');
   const actionEl = document.getElementById('screenEditorHotspotAction');
@@ -965,11 +966,13 @@ function renderSelectedHotspotPanel() {
 
   if (!hotspot) {
     panelEl.classList.add('hidden');
+    if (shellEl) shellEl.classList.remove('with-detail');
     renderPopupDesignerPreview(null);
     return;
   }
 
   panelEl.classList.remove('hidden');
+  if (shellEl) shellEl.classList.add('with-detail');
   nameEl.value = hotspot.label || '';
 
   let action = 'none';
