@@ -2,42 +2,47 @@
 
 // ===== SECURITY: Access guard (role + tenant validation) =====
 (async function checkAccess() {
-  const client = window.supabaseClient;
-  if (!client) {
-    console.error('[DASHBOARD] Supabase client not initialized');
-    window.location.href = "/admin/login.html";
-    return;
-  }
+  try {
+    const client = window.supabaseClient;
+    if (!client) {
+      console.error('[DASHBOARD] Supabase client not initialized');
+      window.location.href = './login.html';
+      return;
+    }
 
-  const { data: sessionData } = await client.auth.getSession();
+    const { data: sessionData } = await client.auth.getSession();
 
-  if (!sessionData.session) {
-    window.location.href = "/admin/login.html";
-    return;
-  }
+    if (!sessionData.session) {
+      window.location.href = './login.html';
+      return;
+    }
 
-  const user = sessionData.session.user;
+    const user = sessionData.session.user;
 
-  const { data: roleData, error } = await client
-    .from("user_roles")
-    .select("*")
-    .eq("user_id", user.id)
-    .single();
+    const { data: roleData, error } = await client
+      .from("user_roles")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
 
-  if (error || !roleData) {
-    alert("Ingen tilgang");
-    await client.auth.signOut();
-    window.location.href = "/admin/login.html";
-    return;
-  }
+    if (error || !roleData) {
+      alert("Ingen tilgang");
+      await client.auth.signOut();
+      window.location.href = './login.html';
+      return;
+    }
 
-  const currentInstall =
-    new URLSearchParams(window.location.search).get("install");
+    const cfg = typeof window.getSupabaseConfig === 'function' ? window.getSupabaseConfig() : null;
+    const currentInstall = new URLSearchParams(window.location.search).get("install") || cfg?.installSlug || null;
 
-  if (roleData.install_slug !== currentInstall) {
-    alert("Feil installasjon");
-    window.location.href = "/admin/login.html";
-    return;
+    if (roleData.install_slug !== currentInstall) {
+      alert("Feil installasjon");
+      window.location.href = './login.html';
+      return;
+    }
+  } catch (e) {
+    console.error('[DASHBOARD] Access guard failed:', e);
+    window.location.href = './login.html';
   }
 })();
 
@@ -104,7 +109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const now = new Date().toISOString();
   console.log('[BOOT]', now, 'dashboard.js loaded');
 
-  if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY) console.log('[BOOT] config loaded');
+  if (typeof window.isSupabaseConfigured === 'function' && window.isSupabaseConfigured()) console.log('[BOOT] config loaded');
   else console.warn('[BOOT] config missing');
 
   if (typeof window.getSupabaseConfig === 'function' && typeof window.isSupabaseConfigured === 'function') console.log('[BOOT] helpers loaded');

@@ -17,11 +17,12 @@ let adminAuthUser = null;
  * Get current Supabase client (from supabase-config.js)
  */
 function getAdminSupabase() {
-  if (!window.supabaseClient) {
+  const client = window.supabaseClient || window.supabase;
+  if (!client || !client.auth || typeof client.auth.getSession !== 'function') {
     console.error('[ADMIN AUTH] Supabase client not available');
     return null;
   }
-  return window.supabaseClient;
+  return client;
 }
 
 /**

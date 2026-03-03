@@ -655,8 +655,22 @@ safeSetBackground(config.bg);
 // Debug Editor Functions
 let debugContainer = null;
 let debugHelp = null;
+let debugDocListeners = [];
+
+function bindDebugDocListener(type, handler) {
+  document.addEventListener(type, handler);
+  debugDocListeners.push({ type, handler });
+}
+
+function clearDebugDocListeners() {
+  debugDocListeners.forEach(({ type, handler }) => {
+    document.removeEventListener(type, handler);
+  });
+  debugDocListeners = [];
+}
 
 function clearDebugEditor() {
+  clearDebugDocListeners();
   if (debugContainer) {
     debugContainer.remove();
     debugContainer = null;
@@ -795,8 +809,8 @@ function renderHotspotBox(container, hotspot, screenName, hotspotIdx, fit) {
   };
   
   box.addEventListener('pointerdown', onStart);
-  document.addEventListener('pointermove', onMove);
-  document.addEventListener('pointerup', onEnd);
+  bindDebugDocListener('pointermove', onMove);
+  bindDebugDocListener('pointerup', onEnd);
   
   container.appendChild(box);
 }
@@ -863,8 +877,8 @@ function renderPulseDot(container, pulse, screenName, pulseIdx, fit) {
   };
   
   dot.addEventListener('pointerdown', onStart);
-  document.addEventListener('pointermove', onMove);
-  document.addEventListener('pointerup', onEnd);
+  bindDebugDocListener('pointermove', onMove);
+  bindDebugDocListener('pointerup', onEnd);
   
   container.appendChild(dot);
 }
@@ -1032,6 +1046,11 @@ async function loadAdsFromSupabase(){
   }
   try {
     const cfg = window.getSupabaseConfig();
+    if (!cfg) {
+      console.warn('[ADS] Missing Supabase config, keeping idle fallback');
+      showIdleBackground();
+      return;
+    }
     const prefix = getAdsPrefix(cfg);
     const { data, error } = await supabase.storage.from(cfg.bucket || 'saxvik-hub').list(prefix, {
       limit: 200,
@@ -1085,6 +1104,7 @@ async function loadPlaylist() {
     if (!supabase) return null;
     
     const cfg = window.getSupabaseConfig();
+    if (!cfg) return null;
     const playlistPath = `installs/${cfg.installSlug}/assets/ads/playlist.json`;
     
     // GUARD: attempt to read playlist.json as text
@@ -1179,6 +1199,11 @@ async function buildAds(){
     return;
   }
   const cfg = window.getSupabaseConfig();
+  if (!cfg) {
+    console.warn('[ADS] Missing Supabase config, skipping buildAds');
+    ADS = [];
+    return;
+  }
   const prefix = getAdsPrefix(cfg);
   console.log('[ADS] prefix:', prefix);
   const list = await listAdsFromSupabase(cfg);
@@ -1597,6 +1622,19 @@ async function startAdsLoop(adsList){
 }
 
 function init(){
+  if (!screenEl || !videoEl || !hotspotsEl) {
+    console.error('[APP] Missing required DOM elements:', {
+      screen: !!screenEl,
+      video: !!videoEl,
+      hotspots: !!hotspotsEl
+    });
+    const appEl = document.getElementById('app');
+    if (appEl) {
+      appEl.innerHTML = '<div style="padding:20px;color:#fff;background:#111;font-family:monospace;">Setup Error: Mangler kritiske DOM-elementer i player.</div>';
+    }
+    return;
+  }
+
   // ensure admin link visibility follows debug
   updateAdminLink();
 
@@ -1670,11 +1708,13 @@ function init(){
   }, true);
 
   // Override window.open to prevent popup escape
-  const originalOpen = window.open;
-  window.open = function(...args) {
-    demoLog('[HARDENING] window.open blocked: ' + args[0]);
-    return null;
-  };
+  if (!window.__sxWindowOpenBlocked) {
+    window.__sxWindowOpenBlocked = true;
+    window.open = function(...args) {
+      demoLog('[HARDENING] window.open blocked: ' + args[0]);
+      return null;
+    };
+  }
 
   // Visibility/tab-hidden handling: pause media without breaking state
   document.addEventListener('visibilitychange', () => {
@@ -1750,12 +1790,48 @@ function init(){
   resetIdleTimer();
 }
 
+const SUPABASE_INIT_MAX_WAIT_MS = 10000;
+let supabaseInitStartTs = 0;
+let supabaseWaitLogTs = 0;
+
 function startWhenSupabaseReady(){
+  if (!supabaseInitStartTs) {
+    supabaseInitStartTs = Date.now();
+  }
+
   if (!getSupabase()){
-    console.log('[APP] waiting for supabase...');
+    const waitedMs = Date.now() - supabaseInitStartTs;
+    if (waitedMs > SUPABASE_INIT_MAX_WAIT_MS) {
+      console.error('[APP] Supabase init timeout after', waitedMs, 'ms. Retrying in 5s...');
+      const appEl = document.getElementById('app');
+      if (appEl && currentScreen === 'idle') {
+        const hint = document.getElementById('supabaseInitHint');
+        if (!hint) {
+          const el = document.createElement('div');
+          el.id = 'supabaseInitHint';
+          el.style.cssText = 'position:fixed;bottom:12px;left:12px;z-index:9999;padding:8px 10px;background:rgba(0,0,0,0.75);color:#fff;font:12px sans-serif;border-radius:8px;';
+          el.textContent = 'Tilkobler innhold… prøver igjen';
+          document.body.appendChild(el);
+        }
+      }
+      supabaseInitStartTs = 0;
+      setTimeout(startWhenSupabaseReady, 5000);
+      return;
+    }
+
+    if ((Date.now() - supabaseWaitLogTs) > 2000) {
+      console.log('[APP] waiting for supabase...');
+      supabaseWaitLogTs = Date.now();
+    }
     requestAnimationFrame(startWhenSupabaseReady);
     return;
   }
+
+  const hint = document.getElementById('supabaseInitHint');
+  if (hint) hint.remove();
+  supabaseInitStartTs = 0;
+  supabaseWaitLogTs = 0;
+
   console.log('[APP] supabase ready → starting ads polling');
   loadAdsFromSupabase();
   if (adsPollTimer) clearInterval(adsPollTimer);

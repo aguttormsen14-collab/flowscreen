@@ -13,6 +13,10 @@
  * Check if Supabase is properly configured
  * @returns {boolean} true if all required credentials are present
  */
+function isValidInstallSlug(slug) {
+  return typeof slug === 'string' && /^[a-z0-9-]{2,40}$/.test(slug);
+}
+
 window.isSupabaseConfigured = function() {
   const cfg = window.SUPABASE_CONFIG || window.CONFIG;
   return !!(cfg && cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY);
@@ -33,12 +37,15 @@ window.getSupabaseConfig = function() {
   // Allow optional override via URL param: ?install=xxx
   const params = new URLSearchParams(location.search);
   const installOverride = params.get('install');
+  const installSlug = isValidInstallSlug(installOverride)
+    ? installOverride
+    : (cfg.DEFAULT_INSTALL_SLUG || 'amfi-steinkjer');
 
   return {
     url: cfg.SUPABASE_URL,
     anonKey: cfg.SUPABASE_ANON_KEY,
     bucket: cfg.SUPABASE_BUCKET || 'saxvik-hub',
-    installSlug: installOverride || cfg.DEFAULT_INSTALL_SLUG || 'amfi-steinkjer'
+    installSlug
   };
 };
 
