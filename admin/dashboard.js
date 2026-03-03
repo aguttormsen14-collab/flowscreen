@@ -490,11 +490,23 @@ async function updateStatusPanel() {
   const configured = (typeof window.isSupabaseConfigured === 'function') && window.isSupabaseConfigured();
   const cfg = (typeof window.getSupabaseConfig === 'function') ? window.getSupabaseConfig() : {};
 
-  const statusHtml = configured
-    ? `✅ Supabase konfigurert<br>Installasjon: <strong>${cfg.installSlug || 'ukjent'}</strong>`
-    : `❌ Supabase ikke konfigurert<br>Sjekk at config.js + supabase-config.js lastes`;
-
-  statusEl.innerHTML = `<p>${statusHtml}</p>`;
+  if (configured) {
+    statusEl.innerHTML = `
+      <div class="sidebar-status-line">
+        <span class="sidebar-status-dot ok" aria-hidden="true"></span>
+        <span>Supabase konfigurert</span>
+      </div>
+      <p class="sidebar-status-meta">Installasjon: <strong>${cfg.installSlug || 'ukjent'}</strong></p>
+    `;
+  } else {
+    statusEl.innerHTML = `
+      <div class="sidebar-status-line">
+        <span class="sidebar-status-dot error" aria-hidden="true"></span>
+        <span>Supabase ikke konfigurert</span>
+      </div>
+      <p class="sidebar-status-meta">Sjekk at config.js + supabase-config.js lastes</p>
+    `;
+  }
 }
 
 const screenEditorState = {

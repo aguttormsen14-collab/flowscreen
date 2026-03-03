@@ -173,6 +173,73 @@ body {
   padding: var(--space-lg) 0;
 }
 
+.sidebar-status {
+  margin: var(--space) var(--space);
+  margin-top: auto;
+  padding: var(--space) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.sidebar-status-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.sidebar-status-subtitle {
+  margin: 4px 0 8px;
+  font-size: 11px;
+  color: rgba(226, 232, 240, 0.75);
+}
+
+.sidebar-status-content {
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.sidebar-status-content p {
+  margin: 0;
+  color: inherit;
+}
+
+.sidebar-status-content .text-muted {
+  color: rgba(226, 232, 240, 0.75);
+}
+
+.sidebar-status-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.sidebar-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.sidebar-status-dot.ok {
+  background: #34d399;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2);
+}
+
+.sidebar-status-dot.error {
+  background: #f87171;
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.2);
+}
+
+.sidebar-status-meta {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: rgba(226, 232, 240, 0.78);
+}
+
 .nav-item {
   display: flex;
   align-items: center;

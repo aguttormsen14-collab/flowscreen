@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Saxvik Admin Dashboard</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b4f8a'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-size='34' fill='white' font-family='Arial,sans-serif'%3ES%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="dashboard.css?v=214" />
+  <link rel="stylesheet" href="dashboard.css?v=215" />
 </head>
 
 <body>
@@ -53,6 +53,14 @@
           <span class="nav-label">Velkomstskjerm</span>
         </a>
       </nav>
+
+      <section class="sidebar-status" aria-label="Systemstatus">
+        <h3 class="sidebar-status-title">Systemstatus</h3>
+        <p class="sidebar-status-subtitle">Tilkobling og miljøstatus</p>
+        <div id="statusContent" class="sidebar-status-content">
+          <p class="text-muted">Laster statusinfo…</p>
+        </div>
+      </section>
     </aside>
 
     <!-- MAIN CONTENT -->
@@ -361,21 +369,6 @@
             </div>
           </div>
 
-          <!-- Status Card -->
-          <div class="card" data-modules="screens">
-            <div class="card-header">
-              <div>
-                <h3 class="card-title">Systemstatus</h3>
-                <p class="card-subtitle">Tilkobling og miljøstatus</p>
-              </div>
-            </div>
-            <div class="card-body">
-              <div id="statusContent">
-                <p class="text-muted">Laster statusinfo…</p>
-              </div>
-            </div>
-          </div>
-
           <!-- Spilling (Playlist) Card -->
           <div class="card" data-modules="ads">
             <div class="card-header">
@@ -418,7 +411,7 @@
   <script src="../supabase-config.js"></script>
   <script src="./admin-auth-supabase.js"></script>
   <script src="./admin-ads.js"></script>
-  <script src="./dashboard.js?v=214"></script>
+  <script src="./dashboard.js?v=215"></script>
   
   <script>
     const params = new URLSearchParams(location.search);
