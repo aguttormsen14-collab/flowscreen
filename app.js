@@ -14,11 +14,11 @@ function getSupabase() {
 // --- render watchdog ------------------------------------------------
 let lastRenderTs = Date.now();
 function markRendered() { lastRenderTs = Date.now(); }
-// fire guard every 2s, force idle if nothing has rendered in 8s
+// fire guard every 2s; only recover if ads appear stuck for too long
 setInterval(() => {
   const elapsed = Date.now() - lastRenderTs;
-  if (elapsed > 8000) {
-    console.warn("[APP] render watchdog triggered → forcing idle");
+  if (elapsed > 30000 && (adsRunning || isAdsScreen(currentScreen))) {
+    console.warn("[APP] render watchdog triggered during ads → forcing idle");
     setScreen('idle');
     showIdleBackground();
     markRendered();
@@ -33,11 +33,11 @@ function withBase(path) {
 }
 
 // === BEHAVIOR CONFIG (easy toggle) ===
-const IDLE_MIN_MS = 10000; // auto-start ads after 10s of idle
+const IDLE_TO_ADS_MS = 10000;      // idle -> ads after 10s inactivity
+const ACTIVE_TO_ADS_MS = 30000;    // map/menu/etc -> ads after 30s inactivity
 
 let idleToAdsTimer = null; // timer from idle -> ads auto-start
 let adsRunning = false; // true when ads are actively playing
-let lastIdleTs = 0; // track when idle screen was shown
 
 // map artifacts cleanup (pulses, overlays, special layers)
 function clearMapArtifacts() {
@@ -55,21 +55,24 @@ function clearMapArtifacts() {
   }
 }
 
-// idle->ads timer management
+// inactivity->ads timer management
 function stopIdleToAdsTimer() {
   if (idleToAdsTimer) { clearTimeout(idleToAdsTimer); idleToAdsTimer = null; }
 }
 
 function scheduleAdsAfterIdle() {
   stopIdleToAdsTimer();
+  if (adsRunning || isAdsScreen(currentScreen)) return;
+
+  const delayMs = currentScreen === 'idle' ? IDLE_TO_ADS_MS : ACTIVE_TO_ADS_MS;
   idleToAdsTimer = setTimeout(() => {
-    if (currentScreen === "idle") {
+    if (!adsRunning && !isAdsScreen(currentScreen)) {
       clearMapArtifacts();
       if (typeof showAdsOverlay === "function") showAdsOverlay();
       else if (typeof startAdsLoop === "function") startAdsLoop();
       adsRunning = true;
     }
-  }, IDLE_MIN_MS);
+  }, delayMs);
 }
 
 function stopAdsNow() {
@@ -99,7 +102,6 @@ function resetAdsCountdown(reason) {
   }
   
   // Note: we do NOT schedule new timer here
-  // setScreen() will call scheduleAdsAfterIdle() when entering idle
 }
 
 function isAdsScreen(id) {
@@ -630,8 +632,6 @@ function hideAdsOverlay(){
   hideAdsTapCatcher(); // This disables pointer-events on tap catcher
 }
 
-const IDLE_TIMEOUT_MS = 30000;
-
 // DOM refs
 const screenEl = document.getElementById("screen");
 const videoEl = document.getElementById("video");
@@ -649,7 +649,6 @@ let videoMaxTimer = null;
 let videoStarted = false;
 let currentVideoHandlers = {};
 
-let idleTimer = null;
 let currentScreen = null;
 let currentDebugData = null; // Tracks debug state
 
@@ -937,17 +936,6 @@ function setScreen(screenName) {
   currentScreen = screenName;
   const config = SCREENS[screenName];
 
-  // record when we entered idle
-  if (goingToIdle) {
-    lastIdleTs = Date.now();
-  }
-  
-  // Give user full 30s when entering map screens
-  const isMapScreen = screenName && (screenName.startsWith('map') || screenName.includes('map'));
-  if (isMapScreen) {
-    resetIdleTimer(); // Ensure full 30s to view the map
-  }
-
 clearHotspots();
 stopAds();
 videoEl.style.display = 'none';
@@ -1026,11 +1014,8 @@ safeSetBackground(config.bg);
     clearDebugEditor();
   }
 
-  // if we just moved to idle screen, schedule auto-start of ads
-  if(screenName === 'idle'){
-    // Always schedule ads when entering idle (fresh timer)
-    scheduleAdsAfterIdle();
-  }
+  // schedule ads countdown from current screen inactivity policy
+  resetIdleTimer();
 
   // update hint visibility after screen change
   updateTouchHintVisibility();
@@ -1473,12 +1458,27 @@ async function listAdsFromSupabase(cfg){
   if (!supabase) return [];
   const prefix = getAdsPrefix(cfg);
   console.log('[ADS] prefix:', prefix);
-  const { data, error } = await supabase.storage.from(cfg.bucket || 'saxvik-hub').list(prefix, { limit: 200, offset: 0 });
-  if (error) {
-    console.error('[ADS] list error', error);
-    return [];
+  const pageSize = 200;
+  let offset = 0;
+  const allItems = [];
+
+  while (true) {
+    const { data, error } = await supabase.storage.from(cfg.bucket || 'saxvik-hub').list(prefix, { limit: pageSize, offset });
+    if (error) {
+      console.error('[ADS] list error', error);
+      return [];
+    }
+    if (!Array.isArray(data) || data.length === 0) {
+      break;
+    }
+    allItems.push(...data);
+    if (data.length < pageSize) {
+      break;
+    }
+    offset += pageSize;
   }
-  const files = data
+
+  const files = allItems
         .filter(f => {
            const ext = f.name.slice(f.name.lastIndexOf('.')).toLowerCase();
            return ADS_EXT.includes(ext);
@@ -1508,43 +1508,25 @@ async function loadAdsFromSupabase(){
       showIdleBackground();
       return;
     }
-    const prefix = getAdsPrefix(cfg);
-    const { data, error } = await supabase.storage.from(cfg.bucket || 'saxvik-hub').list(prefix, {
-      limit: 200,
-      offset: 0,
-    });
-    if (error) {
-      console.error('[ADS] list error', error);
+    const list = await listAdsFromSupabase(cfg);
+    if (!list || list.length === 0) {
       showIdleBackground();
       return;
     }
-    if (!data || data.length === 0) {
-      showIdleBackground();
-      return;
-    }
-    const files = data
-      .filter(f => {
-        const ext = f.name.slice(f.name.lastIndexOf('.')).toLowerCase();
-        return ADS_EXT.includes(ext);
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
 
-    ADS = files.map(f => {
-      const path = `${prefix}/${f.name}`;
-      const url = supabase.storage.from(cfg.bucket || 'saxvik-hub').getPublicUrl(path).data?.publicUrl || '';
-      const lower = f.name.slice(f.name.lastIndexOf('.')).toLowerCase();
-      const isVideo = ['.mp4','.webm','.mov'].includes(lower);
-      return { src: url, isVideo, mime: isVideo ? 'video/mp4' : '' };
+    const nextAds = list.map((item) => {
+      return { src: item.publicUrl, isVideo: item.isVideo, mime: item.mime };
     });
 
-    if (ADS.length === 0) {
+    if (nextAds.length === 0) {
+      ADS = [];
       showIdleBackground();
       return;
     }
-    // Only show ads if we're on idle (not polling ads while user viewing map)
-    if (currentScreen === 'idle') {
+
+    ADS = nextAds;
+    if (adIndex >= ADS.length) {
       adIndex = 0;
-      showAdByIndex(adIndex);
     }
   } catch (e) {
     console.error('[ADS] loadAdsFromSupabase error', e);
@@ -1813,10 +1795,7 @@ function updateAdminStatus(){
 
 
 function resetIdleTimer(){
-  if(idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
-  if(currentScreen !== 'idle'){
-    idleTimer = setTimeout(()=>{ setScreen('idle'); }, IDLE_TIMEOUT_MS);
-  }
+  scheduleAdsAfterIdle();
 }
 
 document.addEventListener('pointerdown', () => {
@@ -1903,13 +1882,13 @@ document.addEventListener('keydown', (e) => {
     setDebugMode(!DEBUG);
     return;
   }
-}, {passive:true});
+}, {passive:false});
 
 document.addEventListener('keyup', (e) => {
   if(e.code === 'KeyD' || e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'ControlLeft' || e.code === 'ControlRight'){
     if(adminHoldTimer){ clearTimeout(adminHoldTimer); adminHoldTimer = null; }
   }
-}, {passive:true});
+}, {passive:false});
 
 // Playlist helpers
 
@@ -2069,14 +2048,6 @@ async function startAdsLoop(adsList){
   clearMapArtifacts();
   stopAds();
   safeSetBackground(ASSETS.idle);
-  // enforce minimum idle display before showing ads
-  if (currentScreen === 'idle') {
-    const now = Date.now();
-    const wait = IDLE_MIN_MS - (now - lastIdleTs);
-    if (wait > 0) {
-      return setTimeout(() => startAdsLoop(adsList), wait);
-    }
-  }
   if (Array.isArray(adsList)) {
     ADS = adsList;
   } else {
@@ -2149,13 +2120,9 @@ function init(){
       showIdleBackground();
       return;
     }
-    
-    // If on idle screen and tap reaches here (no hotspot consumed it):
-    // Reset the ads countdown
-    if (currentScreen === 'idle') {
-      stopIdleToAdsTimer();
-      scheduleAdsAfterIdle();
-    }
+
+    // Any non-hotspot interaction resets inactivity countdown
+    resetIdleTimer();
   });
 
   // ===== PRODUCTION HARDENING START =====
