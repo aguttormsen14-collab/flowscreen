@@ -141,6 +141,24 @@ function initDashboardModuleNavigation() {
   }
 }
 
+function initWelcomeScreenDemo() {
+  const buttons = Array.from(document.querySelectorAll('[data-send-welcome-alert]'));
+  const statusEl = document.getElementById('welcomeAlertStatus');
+
+  if (!buttons.length) return;
+
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const recipient = button.dataset.sendWelcomeAlert || button.textContent?.trim() || 'ukjent';
+      const now = new Date();
+      const timeLabel = now.toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
+      if (statusEl) {
+        statusEl.textContent = `✅ Varsel sendt til ${recipient} kl. ${timeLabel} (demo)`;
+      }
+    });
+  });
+}
+
 function showBootError(message, details) {
   const zoneEl = document.getElementById('adsDropzone');
   const statusEl = document.getElementById('statusContent');
@@ -220,6 +238,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (installEl) installEl.textContent = cfg.installSlug || 'ukjent';
 
   initDashboardModuleNavigation();
+  initWelcomeScreenDemo();
 
   // ensure supabase client is ready before interacting with UI
   const supabase = getSupabase();

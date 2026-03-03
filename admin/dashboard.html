@@ -44,6 +44,10 @@
           <span class="nav-icon">📢</span>
           <span class="nav-label">Reklamestyring</span>
         </a>
+        <a href="#" class="nav-item" data-dashboard-module="welcome" data-module-title="Velkomstskjerm">
+          <span class="nav-icon">👋</span>
+          <span class="nav-label">Velkomstskjerm</span>
+        </a>
       </nav>
     </aside>
 
@@ -114,6 +118,25 @@
                   <p class="dashboard-preview-meta">Visninger: 4 270 · Klikk: 357</p>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Velkomstskjerm Card -->
+          <div class="card card-full" data-modules="welcome">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Velkomstskjerm / Møteskjerm</h3>
+                <p class="card-subtitle">Klikk på navn for å sende varsel (demo)</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="welcome-recipient-list">
+                <button class="welcome-recipient-btn" type="button" data-send-welcome-alert="Ola Nordmann">Ola Nordmann</button>
+                <button class="welcome-recipient-btn" type="button" data-send-welcome-alert="Kari Hansen">Kari Hansen</button>
+                <button class="welcome-recipient-btn" type="button" data-send-welcome-alert="Lars Berg">Lars Berg</button>
+                <button class="welcome-recipient-btn" type="button" data-send-welcome-alert="Ingrid Solberg">Ingrid Solberg</button>
+              </div>
+              <p id="welcomeAlertStatus" class="message">Klikk på et navn for å sende et varsel.</p>
             </div>
           </div>
           
