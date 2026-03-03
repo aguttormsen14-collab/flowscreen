@@ -742,7 +742,7 @@ body {
 .screen-editor-hotspot {
   position: absolute;
   border: 2px solid var(--warning);
-  background: color-mix(in srgb, var(--warning) 15%, transparent);
+  background: color-mix(in srgb, var(--warning) 8%, transparent);
   transform: translate(-50%, -50%);
   cursor: grab;
   touch-action: none;
@@ -756,7 +756,7 @@ body {
 
 .screen-editor-hotspot.selected {
   border-color: var(--info);
-  background: color-mix(in srgb, var(--info) 20%, transparent);
+  background: color-mix(in srgb, var(--info) 12%, transparent);
   box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
 }
 
@@ -772,12 +772,12 @@ body {
   font-size: 11px;
   font-weight: 600;
   color: white;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.52);
   padding: 3px 8px;
   border-radius: var(--radius-sm);
   white-space: nowrap;
   pointer-events: none;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   z-index: 10;
 }
 
@@ -831,12 +831,12 @@ body {
   font-size: 11px;
   font-weight: 600;
   color: white;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.52);
   padding: 3px 8px;
   border-radius: var(--radius-sm);
   white-space: nowrap;
   pointer-events: none;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   z-index: 10;
 }
 

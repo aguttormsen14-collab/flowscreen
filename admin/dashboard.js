@@ -728,10 +728,9 @@ function updateScreenEditorHotspotVisual(element, hotspot) {
   element.style.height = `${hotspot.h * 100}%`;
   const label = element.querySelector('.screen-editor-hotspot-label');
   if (label) {
-    label.textContent = `${hotspot.id} x:${round3(hotspot.x)} y:${round3(hotspot.y)} w:${round3(hotspot.w)} h:${round3(hotspot.h)}`;
-    const displayName = hotspot.label ? `${hotspot.label} (${hotspot.id})` : hotspot.id;
+    const displayName = hotspot.label || hotspot.id;
     const popupMarker = hotspot.popup?.enabled ? ' 🗨️' : '';
-    label.textContent = `${displayName}${popupMarker} x:${round3(hotspot.x)} y:${round3(hotspot.y)} w:${round3(hotspot.w)} h:${round3(hotspot.h)}`;
+    label.textContent = `${displayName}${popupMarker}`;
   }
 }
 
@@ -980,8 +979,8 @@ function updateScreenEditorPulseVisual(element, pulse) {
   element.style.top = `${pulse.y * 100}%`;
   const label = element.querySelector('.screen-editor-pulse-label');
   if (label) {
-    const linked = pulse.followHotspotId ? ` 🔗 ${pulse.followHotspotId}` : '';
-    label.textContent = `${pulse.id} x:${round3(pulse.x)} y:${round3(pulse.y)}${linked}`;
+    const linked = pulse.followHotspotId ? ' 🔗' : '';
+    label.textContent = `${pulse.id}${linked}`;
   }
 }
 
