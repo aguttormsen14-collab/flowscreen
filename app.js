@@ -1024,7 +1024,7 @@ safeSetBackground(config.bg);
       resetIdleTimer();
 
       if (screenName === 'map1' && h.id === 'minibank') {
-        ensureMapPulse('minibank_pulse', 0.444, 0.543);
+        ensureMapPulse('minibank_pulse', 0.444, 0.527);
       }
 
       if (h.go) {
