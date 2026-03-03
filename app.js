@@ -353,6 +353,24 @@ function normalizeRemoteScreensConfig(rawConfig) {
   nextOrder = nextOrder.filter((id, idx) => normalizedScreens[id] && nextOrder.indexOf(id) === idx);
   if (!nextOrder.includes('idle')) nextOrder.unshift('idle');
 
+  const map1 = normalizedScreens.map1;
+  if (map1 && Array.isArray(map1.hotspots)) {
+    const hasMinibank = map1.hotspots.some((hotspot) => String(hotspot?.id || '') === 'minibank');
+    if (!hasMinibank) {
+      map1.hotspots.push({
+        id: 'minibank',
+        x: 0.817,
+        y: 0.262,
+        w: 0.236,
+        h: 0.061,
+        uiButton: true,
+        uiLabel: 'Minibank',
+        label: 'Minibank',
+      });
+      console.log('[SCREENS] Applied migration: added map1/minibank hotspot');
+    }
+  }
+
   return {
     screens: normalizedScreens,
     order: nextOrder,

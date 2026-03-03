@@ -559,6 +559,34 @@ function screensConfigPath(installSlug) {
   return `installs/${installSlug}/config/screens.json`;
 }
 
+function ensureMap1MinibankHotspot(data) {
+  if (!data || typeof data !== 'object') return false;
+  if (!data.screens || typeof data.screens !== 'object') return false;
+
+  const map1 = data.screens.map1;
+  if (!map1 || typeof map1 !== 'object') return false;
+
+  if (!Array.isArray(map1.hotspots)) {
+    map1.hotspots = [];
+  }
+
+  const exists = map1.hotspots.some((hotspot) => String(hotspot?.id || '') === 'minibank');
+  if (exists) return false;
+
+  map1.hotspots.push({
+    id: 'minibank',
+    x: 0.817,
+    y: 0.262,
+    w: 0.236,
+    h: 0.061,
+    uiButton: true,
+    uiLabel: 'Minibank',
+    label: 'Minibank',
+  });
+
+  return true;
+}
+
 function getCurrentEditorScreenConfig() {
   const { data, currentScreenId } = screenEditorState;
   if (!data || !currentScreenId) return null;
@@ -616,6 +644,7 @@ async function loadScreensConfigForEditor() {
     if (!parsed || typeof parsed !== 'object' || !parsed.screens || !parsed.screenOrder) {
       return false;
     }
+    ensureMap1MinibankHotspot(parsed);
     screenEditorState.data = parsed;
     const firstScreen = parsed.screenOrder.find((id) => parsed.screens[id]);
     screenEditorState.currentScreenId = firstScreen || null;
@@ -1020,6 +1049,7 @@ async function saveScreensConfigNow(reason = 'manual') {
   const { supabase, cfg, data } = screenEditorState;
   if (!supabase || !cfg || !data) return false;
   const path = screensConfigPath(cfg.installSlug);
+  ensureMap1MinibankHotspot(data);
   const payload = JSON.stringify(data, null, 2);
 
   screenEditorState.saving = true;
