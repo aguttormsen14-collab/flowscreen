@@ -1,47 +1,70 @@
 -- ============================================
--- Supabase RLS Policies for screens.json
--- USE THE UI METHOD BELOW (NOT THIS SQL)
+-- Supabase Storage policies for screens.json
+-- Project: wayfinding / install: amfi-steinkjer
+-- Date: 2026-03-03
 -- ============================================
 
--- NOTE: Use Supabase Storage Policies UI instead of SQL
--- This file is kept for reference only
+-- Run this in Supabase SQL Editor.
+-- This creates strict policies for ONE file only:
+-- installs/amfi-steinkjer/config/screens.json
+
+-- NOTE:
+-- Do NOT run "alter table storage.objects enable row level security" here.
+-- In many Supabase projects you are not owner of storage.objects, which gives:
+-- ERROR 42501: must be owner of table objects
+--
+-- If needed, enable RLS from Supabase UI:
+-- Authentication/Database settings or Storage policies UI (project-level controls).
+
+-- --------------------------------------------
+-- 1) Clean old policies (safe re-run)
+-- --------------------------------------------
+drop policy if exists "screens_select_amfi" on storage.objects;
+drop policy if exists "screens_insert_amfi" on storage.objects;
+drop policy if exists "screens_update_amfi" on storage.objects;
+
+-- --------------------------------------------
+-- 2) SELECT policy (read)
+-- --------------------------------------------
+create policy "screens_select_amfi"
+on storage.objects
+for select
+to authenticated
+using (
+	bucket_id = 'saxvik-hub'
+	and name = 'installs/amfi-steinkjer/config/screens.json'
+);
+
+-- --------------------------------------------
+-- 3) INSERT policy (create)
+-- --------------------------------------------
+create policy "screens_insert_amfi"
+on storage.objects
+for insert
+to authenticated
+with check (
+	bucket_id = 'saxvik-hub'
+	and name = 'installs/amfi-steinkjer/config/screens.json'
+);
+
+-- --------------------------------------------
+-- 4) UPDATE policy (modify)
+-- --------------------------------------------
+create policy "screens_update_amfi"
+on storage.objects
+for update
+to authenticated
+using (
+	bucket_id = 'saxvik-hub'
+	and name = 'installs/amfi-steinkjer/config/screens.json'
+)
+with check (
+	bucket_id = 'saxvik-hub'
+	and name = 'installs/amfi-steinkjer/config/screens.json'
+);
 
 -- ============================================
--- HOW TO FIX: USE SUPABASE UI (EASIER)
--- ============================================
-
--- 1. Go to supabase.com and log in
--- 2. Open your Saxvik Hub project
--- 3. Go to STORAGE (left sidebar) → saxvik-hub bucket
--- 4. Click "Policies" tab (near the top)
--- 5. Click "New Policy" → "For SELECT (read)"
---    - Policy name: "Allow users to read own install screens"
---    - Under "As": select "Authenticated user"
---    - Click "Add new condition" and set:
---      * Column: "name"
---      * Operator: "starts with"
---      * Value: "installs/" + (your install slug) + "/config/screens.json"
---      Example: "installs/amfi-steinkjer/config/screens.json"
---    - Click "Create policy"
---
--- 6. Click "New Policy" → "For INSERT (create)"
---    - Policy name: "Allow users to insert own install screens"
---    - Under "As": select "Authenticated user"
---    - Same condition as above
---    - Click "Create policy"
---
--- 7. Click "New Policy" → "For UPDATE (modify)"
---    - Policy name: "Allow users to update own install screens"
---    - Under "As": select "Authenticated user"
---    - Same condition as above
---    - Click "Create policy"
---
--- 8. Go back to dashboard and click "Lagre nå" button
---
--- ============================================
--- TEMPORARY FIX (If you want to test first)
--- ============================================
--- 1. Go to Storage → saxvik-hub → Policies
--- 2. Temporarily click "Allow all" while testing
--- 3. Once it works, replace with proper policies above
+-- Optional: broader policy for all files under install
+-- Uncomment if you need more than screens.json:
+-- and name like 'installs/amfi-steinkjer/%'
 -- ============================================
