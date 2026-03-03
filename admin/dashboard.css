@@ -633,8 +633,45 @@ body {
 .tabs {
   display: flex;
   gap: var(--space-xs);
-  margin-bottom: var(--space-md);
   border-bottom: 1px solid var(--border);
+  padding-bottom: 2px;
+}
+
+.screen-settings-top {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.screen-settings-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.screen-settings-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-md);
+}
+
+.settings-panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.settings-panel-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
 }
 
 /* ===== SCREEN EDITOR ===== */
@@ -946,8 +983,8 @@ body {
 
 /* ===== PREVIEW ===== */
 .preview-container {
-  margin: var(--space-md) 0;
-  padding: var(--space-lg);
+  margin: 0;
+  padding: var(--space-md);
   background: var(--bg);
   border-radius: var(--radius);
   text-align: center;
@@ -1020,6 +1057,10 @@ body {
   }
   
   .screen-editor-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .screen-settings-layout {
     grid-template-columns: 1fr;
   }
   

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Saxvik Admin Dashboard</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b4f8a'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-size='34' fill='white' font-family='Arial,sans-serif'%3ES%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="dashboard.css?v=202" />
+  <link rel="stylesheet" href="dashboard.css?v=203" />
 </head>
 
 <body>
@@ -172,7 +172,7 @@
           </div>
 
           <!-- Skjerminnstillinger Card -->
-          <div class="card" data-modules="screens">
+          <div class="card card-full" data-modules="screens">
             <div class="card-header">
               <div>
                 <h3 class="card-title">Skjerminnstillinger</h3>
@@ -180,42 +180,54 @@
               </div>
             </div>
             <div class="card-body">
-              <div class="tabs">
-                <button class="tab-btn active" type="button">Skjerm 1</button>
-                <button class="tab-btn" type="button">Skjerm 2</button>
-                <button class="tab-btn" type="button">Skjerm 3</button>
-              </div>
-              
-              <div class="form-group">
-                <label class="form-label">Orientering</label>
-                <div class="radio-group">
-                  <label class="radio-label">
-                    <input type="radio" name="orientation" value="landscape" />
-                    <span>Vannrett</span>
-                  </label>
-                  <label class="radio-label">
-                    <input type="radio" name="orientation" value="portrait" />
-                    <span>Loddrett</span>
-                  </label>
+              <div class="screen-settings-top">
+                <span class="screen-settings-label">Valgt skjerm</span>
+                <div class="tabs">
+                  <button class="tab-btn active" type="button">Skjerm 1</button>
+                  <button class="tab-btn" type="button">Skjerm 2</button>
+                  <button class="tab-btn" type="button">Skjerm 3</button>
                 </div>
               </div>
 
-              <div class="preview-container">
-                <div id="orientationPreview" class="preview portrait"></div>
-              </div>
-              
-              <p id="orientationMessage" class="message"></p>
+              <div class="screen-settings-layout">
+                <section class="settings-panel">
+                  <h4 class="settings-panel-title">Orientering</h4>
+                  <div class="form-group">
+                    <div class="radio-group">
+                      <label class="radio-label">
+                        <input type="radio" name="orientation" value="landscape" />
+                        <span>Vannrett</span>
+                      </label>
+                      <label class="radio-label">
+                        <input type="radio" name="orientation" value="portrait" />
+                        <span>Loddrett</span>
+                      </label>
+                    </div>
+                  </div>
 
-              <div class="form-group">
-                <label class="checkbox-label">
-                  <input type="checkbox" id="weatherToggle" />
-                  <span>Vis vær-widget</span>
-                </label>
-                <button id="addWeatherBtn" class="btn btn-secondary btn-sm">Legg til været</button>
-                <div id="weatherPreview" class="weather-preview hidden">
-                  Steinkjer – 2°C – Lett skyet
-                </div>
-                <p id="weatherMessage" class="message"></p>
+                  <div class="preview-container">
+                    <div id="orientationPreview" class="preview portrait"></div>
+                  </div>
+
+                  <p id="orientationMessage" class="message"></p>
+                </section>
+
+                <section class="settings-panel">
+                  <h4 class="settings-panel-title">Widgeter</h4>
+                  <div class="form-group">
+                    <label class="checkbox-label">
+                      <input type="checkbox" id="weatherToggle" />
+                      <span>Vis vær-widget</span>
+                    </label>
+
+                    <button id="addWeatherBtn" class="btn btn-secondary btn-sm">Legg til vær-widget</button>
+
+                    <div id="weatherPreview" class="weather-preview hidden">
+                      Steinkjer – 2°C – Lett skyet
+                    </div>
+                    <p id="weatherMessage" class="message"></p>
+                  </div>
+                </section>
               </div>
             </div>
           </div>
@@ -243,30 +255,12 @@
             </div>
           </div>
 
-          <!-- Spilling (Playlist) Card -->
-          <div class="card" data-modules="ads">
-            <div class="card-header">
-              <div>
-                <h3 class="card-title">Spilleliste</h3>
-                <p class="card-subtitle">Administrer rekkefølge og varighet for reklamer</p>
-              </div>
-              <button class="btn btn-primary btn-sm" onclick="refreshPlaylistEditor()">
-                <span>🔄</span> Oppdater
-              </button>
-            </div>
-            <div class="card-body">
-              <div id="playlistEditor" style="min-height: 200px;">
-                <p style="color: var(--text-muted); font-size: 12px;">Laster…</p>
-              </div>
-            </div>
-          </div>
-
           <!-- Værinnstillinger Card -->
           <div class="card" data-modules="screens">
             <div class="card-header">
               <div>
-                <h3 class="card-title">Værinnstillinger</h3>
-                <p class="card-subtitle">Konfigurer værvisning på skjermene</p>
+                <h3 class="card-title">Avanserte værinnstillinger</h3>
+                <p class="card-subtitle">Konfigurer datakilde og visningsdetaljer</p>
               </div>
             </div>
             <div class="card-body">
@@ -287,6 +281,24 @@
             <div class="card-body">
               <div id="statusContent">
                 <p class="text-muted">Laster statusinfo…</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Spilling (Playlist) Card -->
+          <div class="card" data-modules="ads">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Spilleliste</h3>
+                <p class="card-subtitle">Administrer rekkefølge og varighet for reklamer</p>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="refreshPlaylistEditor()">
+                <span>🔄</span> Oppdater
+              </button>
+            </div>
+            <div class="card-body">
+              <div id="playlistEditor" style="min-height: 200px;">
+                <p style="color: var(--text-muted); font-size: 12px;">Laster…</p>
               </div>
             </div>
           </div>
