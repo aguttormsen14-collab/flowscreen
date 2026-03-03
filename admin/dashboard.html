@@ -36,13 +36,13 @@
           <span class="nav-icon">📊</span>
           <span class="nav-label">Dashboard</span>
         </a>
-        <a href="#" class="nav-item" data-dashboard-module="screens" data-module-title="Skjermer">
+        <a href="#" class="nav-item" data-dashboard-module="screens" data-module-title="Skjermstyring">
           <span class="nav-icon">📺</span>
-          <span class="nav-label">Skjermer</span>
+          <span class="nav-label">Skjermstyring</span>
         </a>
-        <a href="#" class="nav-item" data-dashboard-module="ads" data-module-title="Reklame">
+        <a href="#" class="nav-item" data-dashboard-module="ads" data-module-title="Reklamestyring">
           <span class="nav-icon">📢</span>
-          <span class="nav-label">Reklame</span>
+          <span class="nav-label">Reklamestyring</span>
         </a>
       </nav>
     </aside>
@@ -63,9 +63,62 @@
 
         <!-- Content Grid -->
         <div class="content-grid">
+
+          <!-- Dashboard Overview Card -->
+          <div class="card card-full" data-modules="dashboard">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Skjermoversikt (demo)</h3>
+                <p class="card-subtitle">Statisk preview med fiktive aktivitetstall</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="dashboard-kpi-grid">
+                <div class="dashboard-kpi-card">
+                  <p class="dashboard-kpi-label">Visninger i dag</p>
+                  <p class="dashboard-kpi-value">12 480</p>
+                </div>
+                <div class="dashboard-kpi-card">
+                  <p class="dashboard-kpi-label">Klikk i dag</p>
+                  <p class="dashboard-kpi-value">1 126</p>
+                </div>
+                <div class="dashboard-kpi-card">
+                  <p class="dashboard-kpi-label">Aktive skjermer</p>
+                  <p class="dashboard-kpi-value">3</p>
+                </div>
+              </div>
+
+              <div class="dashboard-preview-grid">
+                <div class="dashboard-preview-card">
+                  <p class="dashboard-preview-title">Inngang</p>
+                  <div class="dashboard-preview-stage portrait">
+                    <div class="dashboard-preview-block"></div>
+                    <div class="dashboard-preview-dot"></div>
+                  </div>
+                  <p class="dashboard-preview-meta">Visninger: 4 230 · Klikk: 402</p>
+                </div>
+                <div class="dashboard-preview-card">
+                  <p class="dashboard-preview-title">Rulletrapp</p>
+                  <div class="dashboard-preview-stage landscape">
+                    <div class="dashboard-preview-block"></div>
+                    <div class="dashboard-preview-dot"></div>
+                  </div>
+                  <p class="dashboard-preview-meta">Visninger: 3 980 · Klikk: 367</p>
+                </div>
+                <div class="dashboard-preview-card">
+                  <p class="dashboard-preview-title">Elkjøp</p>
+                  <div class="dashboard-preview-stage portrait">
+                    <div class="dashboard-preview-block"></div>
+                    <div class="dashboard-preview-dot"></div>
+                  </div>
+                  <p class="dashboard-preview-meta">Visninger: 4 270 · Klikk: 357</p>
+                </div>
+              </div>
+            </div>
+          </div>
           
           <!-- Reklame Card -->
-          <div class="card card-full" data-modules="dashboard,ads">
+          <div class="card card-full" data-modules="ads">
             <div class="card-header">
               <div>
                 <h3 class="card-title">Reklamebibliotek</h3>
@@ -96,7 +149,7 @@
           </div>
 
           <!-- Skjerminnstillinger Card -->
-          <div class="card" data-modules="dashboard,screens">
+          <div class="card" data-modules="screens">
             <div class="card-header">
               <div>
                 <h3 class="card-title">Skjerminnstillinger</h3>
@@ -186,7 +239,7 @@
           </div>
 
           <!-- Værinnstillinger Card -->
-          <div class="card" data-modules="dashboard,screens">
+          <div class="card" data-modules="screens">
             <div class="card-header">
               <div>
                 <h3 class="card-title">Værinnstillinger</h3>
@@ -201,7 +254,7 @@
           </div>
 
           <!-- Status Card -->
-          <div class="card" data-modules="dashboard">
+          <div class="card" data-modules="screens">
             <div class="card-header">
               <div>
                 <h3 class="card-title">Systemstatus</h3>

@@ -798,6 +798,103 @@ body {
   border-bottom-color: var(--brand);
 }
 
+/* ===== DASHBOARD OVERVIEW ===== */
+.dashboard-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space);
+  margin-bottom: var(--space-lg);
+}
+
+.dashboard-kpi-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-subtle);
+  padding: var(--space-md);
+}
+
+.dashboard-kpi-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.dashboard-kpi-value {
+  font-size: 24px;
+  color: var(--text);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.dashboard-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-md);
+}
+
+.dashboard-preview-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  padding: var(--space);
+}
+
+.dashboard-preview-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: var(--space-sm);
+}
+
+.dashboard-preview-stage {
+  margin: 0 auto;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-preview-stage.landscape {
+  width: 160px;
+  height: 90px;
+}
+
+.dashboard-preview-stage.portrait {
+  width: 90px;
+  height: 160px;
+}
+
+.dashboard-preview-block {
+  width: 70%;
+  height: 24%;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--brand) 20%, white);
+  border: 1px solid color-mix(in srgb, var(--brand) 40%, white);
+}
+
+.dashboard-preview-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--accent);
+  position: absolute;
+  right: 10%;
+  bottom: 12%;
+}
+
+.dashboard-preview-meta {
+  margin-top: var(--space-sm);
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
 /* ===== PREVIEW ===== */
 .preview-container {
   margin: var(--space-md) 0;
