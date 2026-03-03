@@ -186,6 +186,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const listEl = document.getElementById('adsList');
   const installEl = document.getElementById('currentInstall');
 
+  initDashboardModuleNavigation();
+  initWelcomeScreenDemo();
+  initWayfinderTabs();
+
   // Cache-safe boot lines
   const now = new Date().toISOString();
   console.log('[BOOT]', now, 'dashboard.js loaded');
@@ -236,10 +240,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Show install slug
   const cfg = window.getSupabaseConfig();
   if (installEl) installEl.textContent = cfg.installSlug || 'ukjent';
-
-  initDashboardModuleNavigation();
-  initWelcomeScreenDemo();
-  initWayfinderTabs();
 
   // ensure supabase client is ready before interacting with UI
   const supabase = getSupabase();
