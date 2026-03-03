@@ -357,6 +357,58 @@ html, body {
   font-size: 20px;
 }
 
+.store-popup-canvas {
+  position: relative;
+  width: min(880px, 86vw);
+  max-width: 100%;
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(180deg, #0b1220 0%, #111827 100%);
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.store-popup-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.store-popup-logo {
+  position: absolute;
+  width: clamp(64px, 7vw, 100px);
+  height: clamp(64px, 7vw, 100px);
+  object-fit: contain;
+  display: block;
+}
+
+.store-popup-text {
+  position: absolute;
+  max-width: 62%;
+  padding: clamp(8px, 1.1vw, 12px) clamp(10px, 1.2vw, 14px);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.36);
+  color: #f8fafc;
+  font-family: inherit;
+}
+
+.store-popup-text h2 {
+  margin: 0;
+  font-size: clamp(15px, 2.1vw, 28px);
+  line-height: 1.2;
+}
+
+.store-popup-text p {
+  margin: 6px 0 0;
+  font-size: clamp(13px, 1.8vw, 22px);
+  line-height: 1.35;
+  color: rgba(226, 232, 240, 0.92);
+}
+
 /* Smooth screen transitions */
 #screen{
   position: relative;

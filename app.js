@@ -1527,9 +1527,9 @@ async function openStorePopup(input){
   } else {
     const infoHtml = (popupTitle || popupText)
       ? `
-        <div style="position:absolute;left:${layout.text.x * 100}%;top:${layout.text.y * 100}%;max-width:62%;padding:12px 14px;border-radius:12px;background:rgba(15,23,42,.68);border:1px solid rgba(148,163,184,.4);backdrop-filter: blur(2px);color:#fff;font-family:sans-serif;">
-          ${popupTitle ? `<h2 style="font-size:28px;line-height:1.15;margin:0 0 10px 0;font-weight:800;">${popupTitle}</h2>` : ''}
-          ${popupText ? `<p style="font-size:22px;line-height:1.35;margin:0;color:#e2e8f0;">${popupText}</p>` : ''}
+        <div class="store-popup-text" style="left:${layout.text.x * 100}%;top:${layout.text.y * 100}%">
+          ${popupTitle ? `<h2>${popupTitle}</h2>` : ''}
+          ${popupText ? `<p>${popupText}</p>` : ''}
         </div>
       `
       : '';
@@ -1539,7 +1539,7 @@ async function openStorePopup(input){
         <img
           src="${foundUrl}"
           alt="${escapeHtml(storeId || popupCfg.title || 'butikk')}"
-          style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"
+          class="store-popup-image"
           onerror="this.remove()"
         >
       `
@@ -1550,14 +1550,15 @@ async function openStorePopup(input){
         <img
           src="${logoUrl}"
           alt="${escapeHtml(storeId || popupCfg.title || 'logo')}"
-          style="position:absolute;left:${layout.logo.x * 100}%;top:${layout.logo.y * 100}%;width:100px;height:100px;object-fit:contain;display:block;"
+          class="store-popup-logo"
+          style="left:${layout.logo.x * 100}%;top:${layout.logo.y * 100}%"
           onerror="this.remove()"
         >
       `
       : '';
 
     body.innerHTML = `
-      <div style="position:relative;background:#0b1220;border-radius:14px;overflow:hidden;min-height:min(70vh,760px);padding:0;">
+      <div class="store-popup-canvas">
         ${imageHtml}
         ${logoHtml}
         ${infoHtml}
