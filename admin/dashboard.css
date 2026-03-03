@@ -773,6 +773,18 @@ body {
   align-items: center;
 }
 
+.wayfinder-tabs {
+  margin-bottom: var(--space-md);
+}
+
+.wayfinder-tab-pane {
+  display: block;
+}
+
+.wayfinder-tab-pane.hidden {
+  display: none;
+}
+
 .screen-editor-shell {
   display: grid;
   grid-template-columns: 1fr;
@@ -794,6 +806,37 @@ body {
   color: var(--text);
   font-size: 13px;
   font-weight: 500;
+}
+
+.route-sketch-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.route-sketch-toolbar .message {
+  margin: 0;
+}
+
+.route-sketch-stage {
+  position: relative;
+  width: 100%;
+  min-height: 460px;
+  max-height: 600px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--card) 92%, white) 0%, var(--bg-subtle) 100%);
+  overflow: hidden;
+}
+
+.route-sketch-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
 }
 
 .screen-editor-stage {

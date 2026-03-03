@@ -239,6 +239,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   initDashboardModuleNavigation();
   initWelcomeScreenDemo();
+  initWayfinderTabs();
 
   // ensure supabase client is ready before interacting with UI
   const supabase = getSupabase();
@@ -538,6 +539,245 @@ const screenEditorState = {
     startTy: 0,
   },
 };
+
+const routeSketchState = {
+  initialized: false,
+  drawing: false,
+  points: [],
+  canvas: null,
+  ctx: null,
+};
+
+function initWayfinderTabs() {
+  const tabButtons = Array.from(document.querySelectorAll('[data-wayfinder-tab]'));
+  const panes = Array.from(document.querySelectorAll('[data-wayfinder-pane]'));
+  if (!tabButtons.length || !panes.length) return;
+
+  const setActiveTab = (tabName) => {
+    tabButtons.forEach((button) => {
+      const isActive = button.dataset.wayfinderTab === tabName;
+      button.classList.toggle('active', isActive);
+      button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+
+    panes.forEach((pane) => {
+      pane.classList.toggle('hidden', pane.dataset.wayfinderPane !== tabName);
+    });
+
+    if (tabName === 'editor' && screenEditorState.data && screenEditorState.currentScreenId) {
+      requestAnimationFrame(() => {
+        renderScreenEditorStage();
+      });
+    }
+
+    if (tabName === 'routes') {
+      requestAnimationFrame(() => {
+        renderRouteSketchCanvas();
+      });
+    }
+  };
+
+  tabButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const next = button.dataset.wayfinderTab;
+      if (!next) return;
+      setActiveTab(next);
+    });
+  });
+
+  setActiveTab('editor');
+}
+
+function getRouteSketchPointFromEvent(event) {
+  const canvas = routeSketchState.canvas;
+  if (!canvas) return null;
+
+  const rect = canvas.getBoundingClientRect();
+  if (!rect.width || !rect.height) return null;
+
+  const x = ((event.clientX - rect.left) / rect.width) * canvas.width;
+  const y = ((event.clientY - rect.top) / rect.height) * canvas.height;
+  return { x, y };
+}
+
+function toAlphaColor(hex, alpha) {
+  if (typeof hex !== 'string') return `rgba(15, 23, 42, ${alpha})`;
+  const value = hex.trim();
+  const short = /^#([0-9a-f]{3})$/i.exec(value);
+  if (short) {
+    const [, rgb] = short;
+    const r = parseInt(rgb[0] + rgb[0], 16);
+    const g = parseInt(rgb[1] + rgb[1], 16);
+    const b = parseInt(rgb[2] + rgb[2], 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  const full = /^#([0-9a-f]{6})$/i.exec(value);
+  if (full) {
+    const [, rgb] = full;
+    const r = parseInt(rgb.slice(0, 2), 16);
+    const g = parseInt(rgb.slice(2, 4), 16);
+    const b = parseInt(rgb.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  return `rgba(15, 23, 42, ${alpha})`;
+}
+
+function getRouteSketchTheme() {
+  const styles = getComputedStyle(document.documentElement);
+  const read = (name, fallback) => styles.getPropertyValue(name).trim() || fallback;
+
+  return {
+    bg: read('--bg-subtle', '#eef3f8'),
+    card: read('--card', '#ffffff'),
+    border: read('--border', '#dde6f0'),
+    text: read('--text', '#0f172a'),
+    textMuted: read('--text-muted', '#5f6f84'),
+    success: read('--success', '#10b981'),
+    danger: read('--danger', '#ef4444'),
+    info: read('--info', '#3b82f6'),
+    warning: read('--warning', '#f59e0b'),
+  };
+}
+
+function drawRouteSketchBase(ctx, width, height) {
+  const theme = getRouteSketchTheme();
+
+  ctx.fillStyle = theme.card;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.strokeStyle = toAlphaColor(theme.border, 0.45);
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= width; x += 80) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+  }
+  for (let y = 0; y <= height; y += 80) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = toAlphaColor(theme.warning, 0.2);
+  ctx.fillRect(width * 0.08, height * 0.1, width * 0.32, height * 0.28);
+  ctx.fillRect(width * 0.48, height * 0.18, width * 0.22, height * 0.22);
+  ctx.fillRect(width * 0.72, height * 0.42, width * 0.2, height * 0.26);
+
+  ctx.fillStyle = toAlphaColor(theme.success, 0.22);
+  ctx.fillRect(width * 0.06, height * 0.5, width * 0.86, height * 0.09);
+  ctx.fillRect(width * 0.42, height * 0.12, width * 0.08, height * 0.68);
+
+  ctx.fillStyle = theme.text;
+  ctx.font = '600 28px Inter, Segoe UI, Arial, sans-serif';
+  ctx.fillText('Fiktivt rutekart (demo)', width * 0.04, height * 0.07);
+}
+
+function renderRouteSketchCanvas() {
+  const { canvas, ctx, points } = routeSketchState;
+  if (!canvas || !ctx) return;
+
+  const theme = getRouteSketchTheme();
+
+  drawRouteSketchBase(ctx, canvas.width, canvas.height);
+  if (!points.length) return;
+
+  ctx.beginPath();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = toAlphaColor(theme.info, 0.95);
+  ctx.shadowColor = toAlphaColor(theme.info, 0.25);
+  ctx.shadowBlur = 10;
+
+  points.forEach((point, idx) => {
+    if (idx === 0) ctx.moveTo(point.x, point.y);
+    else ctx.lineTo(point.x, point.y);
+  });
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  const start = points[0];
+  const end = points[points.length - 1];
+
+  ctx.fillStyle = theme.success;
+  ctx.beginPath();
+  ctx.arc(start.x, start.y, 9, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = theme.danger;
+  ctx.beginPath();
+  ctx.arc(end.x, end.y, 9, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function initRouteSketchDemo() {
+  if (routeSketchState.initialized) return;
+
+  const canvas = document.getElementById('routeSketchCanvas');
+  const clearBtn = document.getElementById('routeSketchClearBtn');
+  const statusEl = document.getElementById('routeSketchStatus');
+  if (!canvas || !clearBtn || !statusEl) return;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  routeSketchState.canvas = canvas;
+  routeSketchState.ctx = ctx;
+
+  const beginDraw = (event) => {
+    const point = getRouteSketchPointFromEvent(event);
+    if (!point) return;
+
+    routeSketchState.drawing = true;
+    routeSketchState.points = [point];
+    statusEl.textContent = 'Tegner rute…';
+    renderRouteSketchCanvas();
+
+    event.preventDefault();
+  };
+
+  const moveDraw = (event) => {
+    if (!routeSketchState.drawing) return;
+    const point = getRouteSketchPointFromEvent(event);
+    if (!point) return;
+
+    const last = routeSketchState.points[routeSketchState.points.length - 1];
+    if (last) {
+      const dx = point.x - last.x;
+      const dy = point.y - last.y;
+      if ((dx * dx + dy * dy) < 40) return;
+    }
+
+    routeSketchState.points.push(point);
+    renderRouteSketchCanvas();
+    event.preventDefault();
+  };
+
+  const endDraw = () => {
+    if (!routeSketchState.drawing) return;
+    routeSketchState.drawing = false;
+    statusEl.textContent = routeSketchState.points.length > 1
+      ? `Rute tegnet (${routeSketchState.points.length} punkter)`
+      : 'Klikk og dra for å tegne en rute.';
+  };
+
+  canvas.addEventListener('pointerdown', beginDraw);
+  canvas.addEventListener('pointermove', moveDraw);
+  canvas.addEventListener('pointerup', endDraw);
+  canvas.addEventListener('pointerleave', endDraw);
+  canvas.addEventListener('pointercancel', endDraw);
+
+  clearBtn.addEventListener('click', () => {
+    routeSketchState.points = [];
+    statusEl.textContent = 'Fiktivt kart: hold museknapp inne og tegn en rute.';
+    renderRouteSketchCanvas();
+  });
+
+  renderRouteSketchCanvas();
+  routeSketchState.initialized = true;
+}
 
 function editorStatusClass(type) {
   if (type === 'ok') return 'screen-editor-status-ok';
@@ -1685,6 +1925,7 @@ async function initScreenEditor(supabase, cfg) {
   bindScreenEditorViewportInteractions();
   renderScreenEditorStage();
   bindHotspotPanelEvents();
+  initRouteSketchDemo();
   setScreenEditorStatus('✅ Klar – dra hotspots for å redigere', 'ok');
 
   selectEl.addEventListener('change', () => {

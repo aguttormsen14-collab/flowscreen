@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Saxvik Admin Dashboard</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b4f8a'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-size='34' fill='white' font-family='Arial,sans-serif'%3ES%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="dashboard.css?v=215" />
+  <link rel="stylesheet" href="dashboard.css?v=216" />
 </head>
 
 <body>
@@ -290,66 +290,84 @@
               </div>
             </div>
             <div class="card-body">
-              <div class="screen-editor-shell">
-              <p id="screenEditorStatus" class="message">Laster editor…</p>
-              <div id="screenEditorStage" class="screen-editor-stage">
-                <p id="screenEditorEmpty" class="text-muted">Ingen skjerm valgt</p>
+              <div class="wayfinder-tabs tabs" role="tablist" aria-label="Wayfinder editor faner">
+                <button class="tab-btn active" type="button" role="tab" aria-selected="true" data-wayfinder-tab="editor">Hotspots & Pulse</button>
+                <button class="tab-btn" type="button" role="tab" aria-selected="false" data-wayfinder-tab="routes">Rute-demo</button>
               </div>
 
-              <div id="screenEditorHotspotPanel" class="settings-panel screen-editor-detail-panel hidden">
-                <h4 class="settings-panel-title">Valgt hotspot</h4>
-                <div class="form-group">
-                  <label class="form-label" for="screenEditorHotspotName">Navn</label>
-                  <input id="screenEditorHotspotName" class="screen-editor-input" type="text" placeholder="Butikknavn eller etikett" />
+              <section id="wayfinderTabEditor" class="wayfinder-tab-pane" role="tabpanel" data-wayfinder-pane="editor">
+                <div class="screen-editor-shell">
+                <p id="screenEditorStatus" class="message">Laster editor…</p>
+                <div id="screenEditorStage" class="screen-editor-stage">
+                  <p id="screenEditorEmpty" class="text-muted">Ingen skjerm valgt</p>
                 </div>
-                <div class="form-group">
-                  <label class="form-label" for="screenEditorHotspotAction">Handling</label>
-                  <select id="screenEditorHotspotAction" class="screen-editor-input">
-                    <option value="none">Ingen handling</option>
-                    <option value="navigate">Naviger til side</option>
-                    <option value="popup">Vis popup</option>
-                  </select>
-                </div>
-                <div id="screenEditorNavigateFields" class="form-group hidden">
-                  <label class="form-label" for="screenEditorHotspotGoTarget">Målside</label>
-                  <select id="screenEditorHotspotGoTarget" class="screen-editor-input"></select>
-                </div>
-                <div id="screenEditorPopupFields" class="form-group hidden">
-                  <label class="form-label" for="screenEditorStoreId">Butikk-ID (valgfritt)</label>
-                  <input id="screenEditorStoreId" class="screen-editor-input" type="text" placeholder="f.eks. elkjop" />
 
-                  <label class="form-label" for="screenEditorPopupTitle">Popup tittel</label>
-                  <input id="screenEditorPopupTitle" class="screen-editor-input" type="text" placeholder="f.eks. Tilbud hos Elkjøp" />
-
-                  <label class="form-label" for="screenEditorPopupText">Popup tekst</label>
-                  <textarea id="screenEditorPopupText" class="screen-editor-input screen-editor-textarea" rows="3" placeholder="Kort butikkinfo…"></textarea>
-
-                  <div class="popup-upload-grid">
-                    <div>
-                      <label class="form-label">Popup-bilde</label>
-                      <div id="screenEditorPopupImageDrop" class="popup-upload-drop" data-upload-kind="popup">Dra bilde hit eller klikk for å laste opp</div>
-                      <input id="screenEditorPopupImageInput" type="file" accept="image/*" class="hidden" />
-                    </div>
-                    <div>
-                      <label class="form-label">Logo</label>
-                      <div id="screenEditorPopupLogoDrop" class="popup-upload-drop" data-upload-kind="logo">Dra logo hit eller klikk for å laste opp</div>
-                      <input id="screenEditorPopupLogoInput" type="file" accept="image/*" class="hidden" />
-                    </div>
+                <div id="screenEditorHotspotPanel" class="settings-panel screen-editor-detail-panel hidden">
+                  <h4 class="settings-panel-title">Valgt hotspot</h4>
+                  <div class="form-group">
+                    <label class="form-label" for="screenEditorHotspotName">Navn</label>
+                    <input id="screenEditorHotspotName" class="screen-editor-input" type="text" placeholder="Butikknavn eller etikett" />
                   </div>
+                  <div class="form-group">
+                    <label class="form-label" for="screenEditorHotspotAction">Handling</label>
+                    <select id="screenEditorHotspotAction" class="screen-editor-input">
+                      <option value="none">Ingen handling</option>
+                      <option value="navigate">Naviger til side</option>
+                      <option value="popup">Vis popup</option>
+                    </select>
+                  </div>
+                  <div id="screenEditorNavigateFields" class="form-group hidden">
+                    <label class="form-label" for="screenEditorHotspotGoTarget">Målside</label>
+                    <select id="screenEditorHotspotGoTarget" class="screen-editor-input"></select>
+                  </div>
+                  <div id="screenEditorPopupFields" class="form-group hidden">
+                    <label class="form-label" for="screenEditorStoreId">Butikk-ID (valgfritt)</label>
+                    <input id="screenEditorStoreId" class="screen-editor-input" type="text" placeholder="f.eks. elkjop" />
 
-                  <div class="popup-preview-wrap">
-                    <div id="screenEditorPopupPreview" class="popup-preview-canvas">
-                      <img id="screenEditorPopupPreviewImage" class="popup-preview-image" alt="Popup-bilde" />
-                      <img id="screenEditorPopupPreviewLogo" class="popup-preview-logo" alt="Logo" />
-                      <div id="screenEditorPopupPreviewText" class="popup-preview-text">
-                        <h5 id="screenEditorPopupPreviewTitle">Popup tittel</h5>
-                        <p id="screenEditorPopupPreviewBody">Popup tekst</p>
+                    <label class="form-label" for="screenEditorPopupTitle">Popup tittel</label>
+                    <input id="screenEditorPopupTitle" class="screen-editor-input" type="text" placeholder="f.eks. Tilbud hos Elkjøp" />
+
+                    <label class="form-label" for="screenEditorPopupText">Popup tekst</label>
+                    <textarea id="screenEditorPopupText" class="screen-editor-input screen-editor-textarea" rows="3" placeholder="Kort butikkinfo…"></textarea>
+
+                    <div class="popup-upload-grid">
+                      <div>
+                        <label class="form-label">Popup-bilde</label>
+                        <div id="screenEditorPopupImageDrop" class="popup-upload-drop" data-upload-kind="popup">Dra bilde hit eller klikk for å laste opp</div>
+                        <input id="screenEditorPopupImageInput" type="file" accept="image/*" class="hidden" />
+                      </div>
+                      <div>
+                        <label class="form-label">Logo</label>
+                        <div id="screenEditorPopupLogoDrop" class="popup-upload-drop" data-upload-kind="logo">Dra logo hit eller klikk for å laste opp</div>
+                        <input id="screenEditorPopupLogoInput" type="file" accept="image/*" class="hidden" />
                       </div>
                     </div>
-                    <p class="message">Tips: Dra logo og tekst i preview for å plassere dem slik du vil.</p>
+
+                    <div class="popup-preview-wrap">
+                      <div id="screenEditorPopupPreview" class="popup-preview-canvas">
+                        <img id="screenEditorPopupPreviewImage" class="popup-preview-image" alt="Popup-bilde" />
+                        <img id="screenEditorPopupPreviewLogo" class="popup-preview-logo" alt="Logo" />
+                        <div id="screenEditorPopupPreviewText" class="popup-preview-text">
+                          <h5 id="screenEditorPopupPreviewTitle">Popup tittel</h5>
+                          <p id="screenEditorPopupPreviewBody">Popup tekst</p>
+                        </div>
+                      </div>
+                      <p class="message">Tips: Dra logo og tekst i preview for å plassere dem slik du vil.</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+                </div>
+              </section>
+
+              <section id="wayfinderTabRoutes" class="wayfinder-tab-pane hidden" role="tabpanel" data-wayfinder-pane="routes">
+                <div class="route-sketch-toolbar">
+                  <button id="routeSketchClearBtn" class="btn btn-secondary btn-sm" type="button">Tøm strek</button>
+                  <p id="routeSketchStatus" class="message">Fiktivt kart: hold museknapp inne og tegn en rute.</p>
+                </div>
+                <div class="route-sketch-stage">
+                  <canvas id="routeSketchCanvas" class="route-sketch-canvas" width="1400" height="820" aria-label="Fiktivt rutekart for demo"></canvas>
+                </div>
+              </section>
               </div>
             </div>
           </div>
@@ -411,7 +429,7 @@
   <script src="../supabase-config.js"></script>
   <script src="./admin-auth-supabase.js"></script>
   <script src="./admin-ads.js"></script>
-  <script src="./dashboard.js?v=215"></script>
+  <script src="./dashboard.js?v=216"></script>
   
   <script>
     const params = new URLSearchParams(location.search);
