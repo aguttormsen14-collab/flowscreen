@@ -947,19 +947,28 @@ safeSetBackground(config.bg);
     btn.style.pointerEvents = 'auto';
     btn.style.transform = 'translate(-50%, -50%)';
 
-    btn.addEventListener('pointerdown', (ev) => {
+    let lastActivationTs = 0;
+    const activateHotspot = (ev) => {
+      const now = Date.now();
+      if (now - lastActivationTs < 250) {
+        ev.stopPropagation();
+        ev.preventDefault();
+        return;
+      }
+      lastActivationTs = now;
+
       if (DEBUG && editMode) { ev.stopPropagation(); ev.preventDefault(); return; }
       ev.stopPropagation();
       ev.preventDefault();
-      
-      // ALWAYS reset idle timer on hotspot click
+
       resetIdleTimer();
-      
-      // Handle navigation/popup FIRST
+
       if (h.go) {
+        if (!SCREENS[h.go]) {
+          console.warn('[HOTSPOT] Unknown go target:', h.go, 'from hotspot', h.id, 'on screen', screenName);
+          return;
+        }
         setScreen(h.go);
-        // If going to idle, setScreen will start ads timer
-        // If leaving idle, setScreen will stop ads timer
       } else if (h.popup?.enabled || h.storeId) {
         openStorePopup({
           storeId: h.storeId,
@@ -969,10 +978,12 @@ safeSetBackground(config.bg);
           logoPath: h.popup?.logoPath,
           layout: h.popup?.layout,
         });
-        // Stop ads timer while viewing popup
         stopIdleToAdsTimer();
       }
-    });
+    };
+
+    btn.addEventListener('pointerdown', activateHotspot);
+    btn.addEventListener('click', activateHotspot);
 
     hotspotsEl.appendChild(btn);
   });
