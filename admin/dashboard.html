@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Saxvik Admin Dashboard</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b4f8a'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-size='34' fill='white' font-family='Arial,sans-serif'%3ES%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="dashboard.css?v=200" />
+  <link rel="stylesheet" href="dashboard.css?v=202" />
 </head>
 
 <body>
@@ -17,7 +17,7 @@
         <img id="sxLogoSmall" src="" alt="Saxvik" class="topbar-logo" />
         <div class="topbar-title">
           <h1>Saxvik Hub</h1>
-          <span class="topbar-subtitle">Admin Dashboard</span>
+          <span class="topbar-subtitle">Administrasjon</span>
         </div>
       </div>
       <div class="topbar-actions">
@@ -34,7 +34,7 @@
       <nav class="sidebar-nav">
         <a href="#" class="nav-item active" data-dashboard-module="dashboard" data-module-title="Oversikt">
           <span class="nav-icon">📊</span>
-          <span class="nav-label">Dashboard</span>
+          <span class="nav-label">Oversikt</span>
         </a>
         <a href="#" class="nav-item" data-dashboard-module="screens" data-module-title="Skjermstyring">
           <span class="nav-icon">📺</span>
@@ -73,7 +73,7 @@
             <div class="card-header">
               <div>
                 <h3 class="card-title">Skjermoversikt (demo)</h3>
-                <p class="card-subtitle">Statisk preview med fiktive aktivitetstall</p>
+                <p class="card-subtitle">Statisk forhåndsvisning med fiktive aktivitetstall</p>
               </div>
             </div>
             <div class="card-body">
@@ -126,7 +126,7 @@
             <div class="card-header">
               <div>
                 <h3 class="card-title">Velkomstskjerm / Møteskjerm</h3>
-                <p class="card-subtitle">Klikk på navn for å sende varsel (demo)</p>
+                <p class="card-subtitle">Klikk på navn for å sende et varsel (demo)</p>
               </div>
             </div>
             <div class="card-body">
@@ -145,7 +145,7 @@
             <div class="card-header">
               <div>
                 <h3 class="card-title">Reklamebibliotek</h3>
-                <p class="card-subtitle">Last opp og administrer reklameressurser</p>
+                <p class="card-subtitle">Last opp og administrer reklamefiler</p>
               </div>
               <button class="btn btn-primary btn-sm" onclick="refreshAdsPanel()">
                 <span>🔄</span> Oppdater
@@ -176,7 +176,7 @@
             <div class="card-header">
               <div>
                 <h3 class="card-title">Skjerminnstillinger</h3>
-                <p class="card-subtitle">Konfigurer orientering og visning</p>
+                <p class="card-subtitle">Velg orientering og grunninnstillinger</p>
               </div>
             </div>
             <div class="card-body">
@@ -225,7 +225,7 @@
             <div class="card-header">
               <div>
                 <h3 class="card-title">Skjermeditor</h3>
-                <p class="card-subtitle">Dra hotspots direkte i preview – lagres automatisk</p>
+                <p class="card-subtitle">Rediger hotspots i forhåndsvisningen – lagres automatisk</p>
               </div>
               <div class="screen-editor-toolbar">
                 <select id="screenEditorSelect" class="screen-editor-select"></select>
@@ -247,8 +247,8 @@
           <div class="card" data-modules="ads">
             <div class="card-header">
               <div>
-                <h3 class="card-title">Reklamespilling</h3>
-                <p class="card-subtitle">Administrer rekkefølge og varighet</p>
+                <h3 class="card-title">Spilleliste</h3>
+                <p class="card-subtitle">Administrer rekkefølge og varighet for reklamer</p>
               </div>
               <button class="btn btn-primary btn-sm" onclick="refreshPlaylistEditor()">
                 <span>🔄</span> Oppdater
@@ -266,7 +266,7 @@
             <div class="card-header">
               <div>
                 <h3 class="card-title">Værinnstillinger</h3>
-                <p class="card-subtitle">Konfigurer værdisplay på kioskene</p>
+                <p class="card-subtitle">Konfigurer værvisning på skjermene</p>
               </div>
             </div>
             <div class="card-body">
@@ -281,7 +281,7 @@
             <div class="card-header">
               <div>
                 <h3 class="card-title">Systemstatus</h3>
-                <p class="card-subtitle">Tilkoblingsinformasjon</p>
+                <p class="card-subtitle">Tilkobling og miljøstatus</p>
               </div>
             </div>
             <div class="card-body">
