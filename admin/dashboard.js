@@ -1179,7 +1179,10 @@ function addHotspotToCurrentScreen() {
 function getSelectedClickTargetScreen() {
   const clickTargetEl = document.getElementById('screenEditorClickTarget');
   const target = clickTargetEl?.value || screenEditorState.clickTargetScreenId;
-  return target || null;
+  if (target) return target;
+
+  const fallbackTargets = getScreenEditorTargetScreens();
+  return fallbackTargets[0] || null;
 }
 
 function addHotspotAtPosition({ x, y, mode = 'none' }) {
@@ -1201,9 +1204,11 @@ function addHotspotAtPosition({ x, y, mode = 'none' }) {
 
   if (mode === 'navigate') {
     const targetScreen = getSelectedClickTargetScreen();
-    if (targetScreen) {
-      newHotspot.go = targetScreen;
+    if (!targetScreen) {
+      setScreenEditorStatus('Ingen målsider tilgjengelig for navigasjon', 'warn');
+      return;
     }
+    newHotspot.go = targetScreen;
   }
 
   if (mode === 'popup') {
@@ -1384,7 +1389,15 @@ function bindHotspotPanelEvents() {
 
     const action = actionEl.value || 'none';
     if (action === 'navigate') {
-      hotspot.go = hotspotGoTargetEl.value || undefined;
+      const target = hotspotGoTargetEl.value || getSelectedClickTargetScreen();
+      if (!target) {
+        setScreenEditorStatus('Velg målside for navigasjon', 'warn');
+        return;
+      }
+      hotspot.go = target;
+      if (hotspotGoTargetEl.value !== target) {
+        hotspotGoTargetEl.value = target;
+      }
       delete hotspot.popup;
       if (!storeIdEl.value.trim()) delete hotspot.storeId;
     } else if (action === 'popup') {
