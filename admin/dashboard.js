@@ -503,6 +503,7 @@ const screenEditorState = {
   data: null,
   currentScreenId: null,
   selectedHotspotId: null,
+  selectedPulseId: null,
   autosaveTimer: null,
   saving: false,
   queued: false,
@@ -546,6 +547,11 @@ function getCurrentEditorScreenConfig() {
   return data.screens?.[currentScreenId] || null;
 }
 
+function getSelectedHotspot(screenCfg = getCurrentEditorScreenConfig()) {
+  if (!screenCfg || !Array.isArray(screenCfg.hotspots)) return null;
+  return screenCfg.hotspots.find((hotspot) => hotspot.id === screenEditorState.selectedHotspotId) || null;
+}
+
 function ensureScreenPulses(screenCfg) {
   if (!Array.isArray(screenCfg.pulses)) {
     screenCfg.pulses = [];
@@ -558,6 +564,16 @@ function makePulseId(screenCfg) {
   const base = 'pulse';
   let idx = pulses.length + 1;
   while (pulses.some((pulse) => pulse.id === `${base}_${idx}`)) {
+    idx += 1;
+  }
+  return `${base}_${idx}`;
+}
+
+function makeHotspotId(screenCfg) {
+  const hotspots = Array.isArray(screenCfg.hotspots) ? screenCfg.hotspots : [];
+  const base = 'hotspot';
+  let idx = hotspots.length + 1;
+  while (hotspots.some((hotspot) => hotspot.id === `${base}_${idx}`)) {
     idx += 1;
   }
   return `${base}_${idx}`;
@@ -649,7 +665,44 @@ function updateScreenEditorHotspotVisual(element, hotspot) {
   const label = element.querySelector('.screen-editor-hotspot-label');
   if (label) {
     label.textContent = `${hotspot.id} x:${round3(hotspot.x)} y:${round3(hotspot.y)} w:${round3(hotspot.w)} h:${round3(hotspot.h)}`;
+    const displayName = hotspot.label ? `${hotspot.label} (${hotspot.id})` : hotspot.id;
+    const popupMarker = hotspot.popup?.enabled ? ' 🗨️' : '';
+    label.textContent = `${displayName}${popupMarker} x:${round3(hotspot.x)} y:${round3(hotspot.y)} w:${round3(hotspot.w)} h:${round3(hotspot.h)}`;
   }
+}
+
+function updateHotspotPopupFieldVisibility() {
+  const popupToggleEl = document.getElementById('screenEditorPopupEnabled');
+  const popupFieldsEl = document.getElementById('screenEditorPopupFields');
+  if (!popupToggleEl || !popupFieldsEl) return;
+  popupFieldsEl.classList.toggle('hidden', !popupToggleEl.checked);
+}
+
+function renderSelectedHotspotPanel() {
+  const panelEl = document.getElementById('screenEditorHotspotPanel');
+  const nameEl = document.getElementById('screenEditorHotspotName');
+  const popupEnabledEl = document.getElementById('screenEditorPopupEnabled');
+  const storeIdEl = document.getElementById('screenEditorStoreId');
+  const popupTitleEl = document.getElementById('screenEditorPopupTitle');
+  const popupTextEl = document.getElementById('screenEditorPopupText');
+
+  if (!panelEl || !nameEl || !popupEnabledEl || !storeIdEl || !popupTitleEl || !popupTextEl) return;
+
+  const screenCfg = getCurrentEditorScreenConfig();
+  const hotspot = getSelectedHotspot(screenCfg);
+
+  if (!hotspot) {
+    panelEl.classList.add('hidden');
+    return;
+  }
+
+  panelEl.classList.remove('hidden');
+  nameEl.value = hotspot.label || '';
+  popupEnabledEl.checked = !!hotspot.popup?.enabled;
+  storeIdEl.value = hotspot.storeId || '';
+  popupTitleEl.value = hotspot.popup?.title || '';
+  popupTextEl.value = hotspot.popup?.text || '';
+  updateHotspotPopupFieldVisibility();
 }
 
 function updateScreenEditorPulseVisual(element, pulse) {
@@ -772,11 +825,14 @@ function attachHotspotEditorBehavior(overlayEl, hotspotEl, hotspot, screenCfg) {
     if (event.target === handle) return;
     mode = 'move';
     screenEditorState.selectedHotspotId = hotspot.id;
+    screenEditorState.selectedPulseId = null;
     overlayEl.querySelectorAll('.screen-editor-hotspot').forEach((el) => el.classList.remove('selected'));
+    overlayEl.querySelectorAll('.screen-editor-pulse').forEach((el) => el.classList.remove('selected'));
     hotspotEl.classList.add('selected');
     startX = event.clientX;
     startY = event.clientY;
     startHotspot = { x: hotspot.x, y: hotspot.y, w: hotspot.w, h: hotspot.h };
+    renderSelectedHotspotPanel();
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
     event.preventDefault();
@@ -829,6 +885,13 @@ function attachPulseEditorBehavior(overlayEl, pulseEl, pulse) {
   };
 
   pulseEl.addEventListener('pointerdown', (event) => {
+    screenEditorState.selectedPulseId = pulse.id;
+    screenEditorState.selectedHotspotId = null;
+    overlayEl.querySelectorAll('.screen-editor-pulse').forEach((el) => el.classList.remove('selected'));
+    overlayEl.querySelectorAll('.screen-editor-hotspot').forEach((el) => el.classList.remove('selected'));
+    pulseEl.classList.add('selected');
+    renderSelectedHotspotPanel();
+
     dragging = true;
     startX = event.clientX;
     startY = event.clientY;
@@ -838,6 +901,193 @@ function attachPulseEditorBehavior(overlayEl, pulseEl, pulse) {
     event.preventDefault();
     event.stopPropagation();
   });
+}
+
+function addHotspotToCurrentScreen() {
+  const screenCfg = getCurrentEditorScreenConfig();
+  if (!screenCfg) return;
+
+  if (!Array.isArray(screenCfg.hotspots)) {
+    screenCfg.hotspots = [];
+  }
+
+  const newHotspot = {
+    id: makeHotspotId(screenCfg),
+    label: 'Ny hotspot',
+    x: 0.5,
+    y: 0.5,
+    w: 0.12,
+    h: 0.08,
+  };
+
+  screenCfg.hotspots.push(newHotspot);
+  screenEditorState.selectedHotspotId = newHotspot.id;
+  screenEditorState.selectedPulseId = null;
+  renderScreenEditorStage();
+  renderSelectedHotspotPanel();
+  scheduleScreenEditorAutosave('new-hotspot');
+  setScreenEditorStatus(`✅ Opprettet ${newHotspot.id}`, 'ok');
+}
+
+function confirmScreenEditorAction(message, title = 'Bekreft sletting') {
+  const modalEl = document.getElementById('screenEditorConfirmModal');
+  const titleEl = document.getElementById('screenEditorConfirmTitle');
+  const messageEl = document.getElementById('screenEditorConfirmMessage');
+  const cancelBtn = document.getElementById('screenEditorConfirmCancel');
+  const okBtn = document.getElementById('screenEditorConfirmOk');
+
+  if (!modalEl || !titleEl || !messageEl || !cancelBtn || !okBtn) {
+    return Promise.resolve(window.confirm(message));
+  }
+
+  titleEl.textContent = title;
+  messageEl.textContent = message;
+  modalEl.classList.remove('hidden');
+
+  return new Promise((resolve) => {
+    const cleanup = () => {
+      modalEl.classList.add('hidden');
+      cancelBtn.removeEventListener('click', onCancel);
+      okBtn.removeEventListener('click', onConfirm);
+      modalEl.removeEventListener('click', onBackdrop);
+      window.removeEventListener('keydown', onKeydown);
+    };
+
+    const onCancel = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    const onConfirm = () => {
+      cleanup();
+      resolve(true);
+    };
+
+    const onBackdrop = (event) => {
+      if (event.target === modalEl) {
+        onCancel();
+      }
+    };
+
+    const onKeydown = (event) => {
+      if (event.key === 'Escape') onCancel();
+      if (event.key === 'Enter') onConfirm();
+    };
+
+    cancelBtn.addEventListener('click', onCancel);
+    okBtn.addEventListener('click', onConfirm);
+    modalEl.addEventListener('click', onBackdrop);
+    window.addEventListener('keydown', onKeydown);
+    okBtn.focus();
+  });
+}
+
+async function deleteSelectedPulseFromCurrentScreen() {
+  const screenCfg = getCurrentEditorScreenConfig();
+  if (!screenCfg) return;
+
+  const pulses = ensureScreenPulses(screenCfg);
+  if (!screenEditorState.selectedPulseId) {
+    setScreenEditorStatus('Velg en pulse i preview først', 'warn');
+    return;
+  }
+
+  const idx = pulses.findIndex((pulse) => pulse.id === screenEditorState.selectedPulseId);
+  if (idx < 0) {
+    setScreenEditorStatus('Fant ikke valgt pulse', 'warn');
+    return;
+  }
+
+  const pulseId = pulses[idx].id;
+  const confirmed = await confirmScreenEditorAction(`Slette pulse "${pulseId}"?`);
+  if (!confirmed) return;
+
+  const [removed] = pulses.splice(idx, 1);
+  screenEditorState.selectedPulseId = null;
+  renderScreenEditorStage();
+  scheduleScreenEditorAutosave('delete-pulse');
+  setScreenEditorStatus(`🗑️ Slettet ${removed.id}`, 'ok');
+}
+
+async function deleteSelectedHotspotFromCurrentScreen() {
+  const screenCfg = getCurrentEditorScreenConfig();
+  if (!screenCfg) return;
+
+  if (!screenEditorState.selectedHotspotId) {
+    setScreenEditorStatus('Velg en hotspot i preview først', 'warn');
+    return;
+  }
+
+  if (!Array.isArray(screenCfg.hotspots)) {
+    screenCfg.hotspots = [];
+  }
+
+  const hotspotIdx = screenCfg.hotspots.findIndex((hotspot) => hotspot.id === screenEditorState.selectedHotspotId);
+  if (hotspotIdx < 0) {
+    setScreenEditorStatus('Fant ikke valgt hotspot', 'warn');
+    return;
+  }
+
+  const hotspotId = screenCfg.hotspots[hotspotIdx].id;
+  const confirmed = await confirmScreenEditorAction(`Slette hotspot "${hotspotId}"?`);
+  if (!confirmed) return;
+
+  const [removed] = screenCfg.hotspots.splice(hotspotIdx, 1);
+  ensureScreenPulses(screenCfg).forEach((pulse) => {
+    if (pulse.followHotspotId === removed.id) {
+      delete pulse.followHotspotId;
+    }
+  });
+
+  screenEditorState.selectedHotspotId = null;
+  renderScreenEditorStage();
+  renderSelectedHotspotPanel();
+  scheduleScreenEditorAutosave('delete-hotspot');
+  setScreenEditorStatus(`🗑️ Slettet ${removed.id}`, 'ok');
+}
+
+function bindHotspotPanelEvents() {
+  const nameEl = document.getElementById('screenEditorHotspotName');
+  const popupEnabledEl = document.getElementById('screenEditorPopupEnabled');
+  const storeIdEl = document.getElementById('screenEditorStoreId');
+  const popupTitleEl = document.getElementById('screenEditorPopupTitle');
+  const popupTextEl = document.getElementById('screenEditorPopupText');
+
+  if (!nameEl || !popupEnabledEl || !storeIdEl || !popupTitleEl || !popupTextEl) return;
+
+  const applyChanges = (reason) => {
+    const hotspot = getSelectedHotspot();
+    if (!hotspot) return;
+
+    hotspot.label = nameEl.value.trim() || undefined;
+
+    if (popupEnabledEl.checked) {
+      hotspot.storeId = storeIdEl.value.trim() || undefined;
+      hotspot.popup = {
+        enabled: true,
+        ...(popupTitleEl.value.trim() && { title: popupTitleEl.value.trim() }),
+        ...(popupTextEl.value.trim() && { text: popupTextEl.value.trim() }),
+      };
+    } else {
+      delete hotspot.popup;
+      if (!storeIdEl.value.trim()) {
+        delete hotspot.storeId;
+      }
+    }
+
+    renderScreenEditorStage();
+    renderSelectedHotspotPanel();
+    scheduleScreenEditorAutosave(reason);
+  };
+
+  nameEl.addEventListener('input', () => applyChanges('hotspot-name'));
+  popupEnabledEl.addEventListener('change', () => {
+    updateHotspotPopupFieldVisibility();
+    applyChanges('hotspot-popup-toggle');
+  });
+  storeIdEl.addEventListener('input', () => applyChanges('hotspot-storeid'));
+  popupTitleEl.addEventListener('input', () => applyChanges('hotspot-popup-title'));
+  popupTextEl.addEventListener('input', () => applyChanges('hotspot-popup-text'));
 }
 
 function addPulseToCurrentScreen({ followSelectedHotspot = false } = {}) {
@@ -929,17 +1179,21 @@ function renderScreenEditorStage() {
 
   stageEl.appendChild(image);
   stageEl.appendChild(overlay);
+  renderSelectedHotspotPanel();
 }
 
 async function initScreenEditor(supabase, cfg) {
   const selectEl = document.getElementById('screenEditorSelect');
+  const addHotspotBtn = document.getElementById('screenEditorAddHotspotBtn');
+  const deleteHotspotBtn = document.getElementById('screenEditorDeleteHotspotBtn');
   const addPulseBtn = document.getElementById('screenEditorAddPulseBtn');
   const addPulseFromHotspotBtn = document.getElementById('screenEditorAddPulseFromHotspotBtn');
+  const deletePulseBtn = document.getElementById('screenEditorDeletePulseBtn');
   const reloadBtn = document.getElementById('screenEditorReloadBtn');
   const saveBtn = document.getElementById('screenEditorSaveBtn');
   const stageEl = document.getElementById('screenEditorStage');
 
-  if (!selectEl || !addPulseBtn || !addPulseFromHotspotBtn || !reloadBtn || !saveBtn || !stageEl) return;
+  if (!selectEl || !addHotspotBtn || !deleteHotspotBtn || !addPulseBtn || !addPulseFromHotspotBtn || !deletePulseBtn || !reloadBtn || !saveBtn || !stageEl) return;
 
   screenEditorState.supabase = supabase;
   screenEditorState.cfg = cfg;
@@ -950,13 +1204,23 @@ async function initScreenEditor(supabase, cfg) {
 
   renderScreenEditorSelect();
   renderScreenEditorStage();
+  bindHotspotPanelEvents();
   setScreenEditorStatus('✅ Klar – dra hotspots for å redigere', 'ok');
 
   selectEl.addEventListener('change', () => {
     screenEditorState.currentScreenId = selectEl.value;
     screenEditorState.selectedHotspotId = null;
+    screenEditorState.selectedPulseId = null;
     renderScreenEditorStage();
     setScreenEditorStatus(`Viser ${selectEl.value}`, 'ok');
+  });
+
+  addHotspotBtn.addEventListener('click', () => {
+    addHotspotToCurrentScreen();
+  });
+
+  deleteHotspotBtn.addEventListener('click', async () => {
+    await deleteSelectedHotspotFromCurrentScreen();
   });
 
   addPulseBtn.addEventListener('click', () => {
@@ -967,11 +1231,16 @@ async function initScreenEditor(supabase, cfg) {
     addPulseToCurrentScreen({ followSelectedHotspot: true });
   });
 
+  deletePulseBtn.addEventListener('click', async () => {
+    await deleteSelectedPulseFromCurrentScreen();
+  });
+
   reloadBtn.addEventListener('click', async () => {
     setScreenEditorStatus('Laster på nytt…', 'warn');
     const loaded = await loadScreensConfigForEditor();
     if (!loaded) return;
     screenEditorState.selectedHotspotId = null;
+    screenEditorState.selectedPulseId = null;
     renderScreenEditorSelect();
     renderScreenEditorStage();
     setScreenEditorStatus('✅ Lastet på nytt', 'ok');

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Saxvik Admin Dashboard</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b4f8a'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-size='34' fill='white' font-family='Arial,sans-serif'%3ES%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="dashboard.css?v=203" />
+  <link rel="stylesheet" href="dashboard.css?v=206" />
 </head>
 
 <body>
@@ -241,8 +241,11 @@
               </div>
               <div class="screen-editor-toolbar">
                 <select id="screenEditorSelect" class="screen-editor-select"></select>
+                <button id="screenEditorAddHotspotBtn" class="btn btn-secondary btn-sm" type="button">Ny hotspot</button>
+                <button id="screenEditorDeleteHotspotBtn" class="btn btn-secondary btn-sm" type="button">Slett valgt hotspot</button>
                 <button id="screenEditorAddPulseBtn" class="btn btn-secondary btn-sm" type="button">Ny pulse</button>
                 <button id="screenEditorAddPulseFromHotspotBtn" class="btn btn-secondary btn-sm" type="button">Pulse fra valgt hotspot</button>
+                <button id="screenEditorDeletePulseBtn" class="btn btn-secondary btn-sm" type="button">Slett valgt pulse</button>
                 <button id="screenEditorReloadBtn" class="btn btn-secondary btn-sm" type="button">Last inn på nytt</button>
                 <button id="screenEditorSaveBtn" class="btn btn-primary btn-sm" type="button">Lagre nå</button>
               </div>
@@ -251,6 +254,30 @@
               <p id="screenEditorStatus" class="message">Laster editor…</p>
               <div id="screenEditorStage" class="screen-editor-stage">
                 <p id="screenEditorEmpty" class="text-muted">Ingen skjerm valgt</p>
+              </div>
+
+              <div id="screenEditorHotspotPanel" class="settings-panel hidden">
+                <h4 class="settings-panel-title">Valgt hotspot</h4>
+                <div class="form-group">
+                  <label class="form-label" for="screenEditorHotspotName">Navn</label>
+                  <input id="screenEditorHotspotName" class="screen-editor-input" type="text" placeholder="Butikknavn eller etikett" />
+                </div>
+                <div class="form-group">
+                  <label class="checkbox-label">
+                    <input id="screenEditorPopupEnabled" type="checkbox" />
+                    <span>Aktiver popup for hotspot</span>
+                  </label>
+                </div>
+                <div id="screenEditorPopupFields" class="form-group hidden">
+                  <label class="form-label" for="screenEditorStoreId">Butikk-ID (valgfritt)</label>
+                  <input id="screenEditorStoreId" class="screen-editor-input" type="text" placeholder="f.eks. elkjop" />
+
+                  <label class="form-label" for="screenEditorPopupTitle">Popup tittel</label>
+                  <input id="screenEditorPopupTitle" class="screen-editor-input" type="text" placeholder="f.eks. Tilbud hos Elkjøp" />
+
+                  <label class="form-label" for="screenEditorPopupText">Popup tekst</label>
+                  <textarea id="screenEditorPopupText" class="screen-editor-input screen-editor-textarea" rows="3" placeholder="Kort butikkinfo…"></textarea>
+                </div>
               </div>
             </div>
           </div>
@@ -307,6 +334,17 @@
       </div>
     </main>
 
+  </div>
+
+  <div id="screenEditorConfirmModal" class="screen-editor-confirm hidden" role="dialog" aria-modal="true" aria-labelledby="screenEditorConfirmTitle">
+    <div class="screen-editor-confirm-card">
+      <h4 id="screenEditorConfirmTitle" class="screen-editor-confirm-title">Bekreft handling</h4>
+      <p id="screenEditorConfirmMessage" class="screen-editor-confirm-message">Er du sikker?</p>
+      <div class="screen-editor-confirm-actions">
+        <button id="screenEditorConfirmCancel" class="btn btn-secondary btn-sm" type="button">Avbryt</button>
+        <button id="screenEditorConfirmOk" class="btn btn-primary btn-sm" type="button">Slett</button>
+      </div>
+    </div>
   </div>
 
   <!-- SCRIPTS -->

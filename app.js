@@ -275,6 +275,13 @@ function normalizeScreenItem(screenId, item) {
           go: hotspot.go ? String(hotspot.go) : undefined,
           label: hotspot.label ? String(hotspot.label) : undefined,
           storeId: hotspot.storeId ? String(hotspot.storeId) : undefined,
+          popup: hotspot.popup && typeof hotspot.popup === 'object'
+            ? {
+                enabled: hotspot.popup.enabled !== false,
+                ...(hotspot.popup.title ? { title: String(hotspot.popup.title) } : {}),
+                ...(hotspot.popup.text ? { text: String(hotspot.popup.text) } : {}),
+              }
+            : undefined,
         }))
         .filter((hotspot) => Number.isFinite(hotspot.x) && Number.isFinite(hotspot.y) && Number.isFinite(hotspot.w) && Number.isFinite(hotspot.h))
     : [];
@@ -364,6 +371,13 @@ function buildScreensConfigPayload() {
           ...(h.go && { go: String(h.go) }),
           ...(h.label && { label: String(h.label) }),
           ...(h.storeId && { storeId: String(h.storeId) }),
+          ...(h.popup && typeof h.popup === 'object' && {
+            popup: {
+              enabled: h.popup.enabled !== false,
+              ...(h.popup.title && { title: String(h.popup.title) }),
+              ...(h.popup.text && { text: String(h.popup.text) }),
+            }
+          }),
         }))
       : [];
 
@@ -910,8 +924,12 @@ safeSetBackground(config.bg);
         setScreen(h.go);
         // If going to idle, setScreen will start ads timer
         // If leaving idle, setScreen will stop ads timer
-      } else if (h.storeId) {
-        openStorePopup(h.storeId);
+      } else if (h.popup?.enabled || h.storeId) {
+        openStorePopup({
+          storeId: h.storeId,
+          title: h.popup?.title || h.label,
+          text: h.popup?.text || ''
+        });
         // Stop ads timer while viewing popup
         stopIdleToAdsTimer();
       }
@@ -1241,50 +1259,78 @@ function escapeHtml(str){
   }[s]));
 }
 
-async function openStorePopup(storeId){
+async function openStorePopup(input){
   const modal = document.getElementById('storeModal');
   const body  = document.getElementById('storeBody');
   const closeBtn = document.getElementById('storeClose');
   if(!modal || !body) return;
 
+  const popupCfg = (typeof input === 'string')
+    ? { storeId: input }
+    : (input && typeof input === 'object' ? input : {});
+
+  const storeId = popupCfg.storeId || '';
+  const popupTitle = popupCfg.title ? escapeHtml(popupCfg.title) : '';
+  const popupText = popupCfg.text ? escapeHtml(popupCfg.text) : '';
+
   // prøver i denne rekkefølgen (webp først, så png/jpg)
   const exts = ['.webp', '.png', '.jpg', '.jpeg'];
   let foundUrl = null;
 
-  for(const ext of exts){
-    const url = `${STORES_ASSETS}/${storeId}/popup${ext}`;
-    try{
-      // HEAD kan være blokkert noen steder -> bruk GET med Range fallback
-      const head = await fetch(url, { method:'HEAD', cache:'no-store' });
-      if(head.ok){ foundUrl = url; break; }
+  if (storeId) {
+    for(const ext of exts){
+      const url = `${STORES_ASSETS}/${storeId}/popup${ext}`;
+      try{
+        // HEAD kan være blokkert noen steder -> bruk GET med Range fallback
+        const head = await fetch(url, { method:'HEAD', cache:'no-store' });
+        if(head.ok){ foundUrl = url; break; }
 
-      const get = await fetch(url, {
-        method:'GET',
-        headers: { Range: 'bytes=0-0' },
-        cache:'no-store'
-      });
-      if(get.ok){ foundUrl = url; break; }
-    }catch(e){
-      // ignorer og prøv neste ext
+        const get = await fetch(url, {
+          method:'GET',
+          headers: { Range: 'bytes=0-0' },
+          cache:'no-store'
+        });
+        if(get.ok){ foundUrl = url; break; }
+      }catch(e){
+        // ignorer og prøv neste ext
+      }
     }
   }
 
-  if(!foundUrl){
+  if(!foundUrl && !popupTitle && !popupText){
     body.innerHTML = `
       <div style="color:#fff; font-family:sans-serif;">
-        Fant ikke popup-bilde for <b>${storeId}</b>.<br>
+        Fant ikke popup-data for <b>${escapeHtml(storeId || 'ukjent butikk')}</b>.<br>
         Legg inn en fil som heter <code>popup.png</code> / <code>popup.jpg</code> / <code>popup.webp</code>
         i mappen <code>stores/${storeId}/</code>.
       </div>
     `;
   } else {
+    const infoHtml = (popupTitle || popupText)
+      ? `
+        <div style="padding: 0 0 16px 0; color:#111827; font-family: sans-serif;">
+          ${popupTitle ? `<h2 style="font-size:28px;line-height:1.15;margin:0 0 10px 0;font-weight:800;">${popupTitle}</h2>` : ''}
+          ${popupText ? `<p style="font-size:22px;line-height:1.4;margin:0;color:#374151;">${popupText}</p>` : ''}
+        </div>
+      `
+      : '';
+
+    const imageHtml = foundUrl
+      ? `
+        <img
+          src="${foundUrl}"
+          alt="${escapeHtml(storeId || popupCfg.title || 'butikk')}"
+          style="width:100%;height:auto;display:block;border-radius:12px;"
+          onerror="this.remove()"
+        >
+      `
+      : '';
+
     body.innerHTML = `
-      <img
-        src="${foundUrl}"
-        alt="${storeId}"
-        style="width:100%;height:auto;display:block;border-radius:12px;"
-        onerror="this.remove()"
-      >
+      <div style="background:#ffffff; border-radius:12px; padding:16px;">
+        ${infoHtml}
+        ${imageHtml}
+      </div>
     `;
   }
 
