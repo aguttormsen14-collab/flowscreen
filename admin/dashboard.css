@@ -724,6 +724,10 @@ body {
   inset: 0;
 }
 
+.screen-editor-overlay.click-create {
+  cursor: crosshair;
+}
+
 .screen-editor-hotspot {
   position: absolute;
   border: 2px solid var(--warning);
@@ -845,6 +849,10 @@ body {
   color: var(--text);
   font: inherit;
   padding: 9px 10px;
+}
+
+.screen-editor-select.hidden {
+  display: none !important;
 }
 
 .screen-editor-input:focus-visible {

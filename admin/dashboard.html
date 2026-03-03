@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Saxvik Admin Dashboard</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b4f8a'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-size='34' fill='white' font-family='Arial,sans-serif'%3ES%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="dashboard.css?v=206" />
+  <link rel="stylesheet" href="dashboard.css?v=207" />
 </head>
 
 <body>
@@ -241,6 +241,13 @@
               </div>
               <div class="screen-editor-toolbar">
                 <select id="screenEditorSelect" class="screen-editor-select"></select>
+                <select id="screenEditorClickMode" class="screen-editor-select" title="Klikkmodus i forhåndsvisning">
+                  <option value="select">Klikkmodus: Velg</option>
+                  <option value="hotspot-nav">Klikkmodus: Hotspot → side</option>
+                  <option value="hotspot-popup">Klikkmodus: Hotspot → popup</option>
+                  <option value="pulse">Klikkmodus: Pulse</option>
+                </select>
+                <select id="screenEditorClickTarget" class="screen-editor-select hidden" title="Målside for nye hotspot-navigationer"></select>
                 <button id="screenEditorAddHotspotBtn" class="btn btn-secondary btn-sm" type="button">Ny hotspot</button>
                 <button id="screenEditorDeleteHotspotBtn" class="btn btn-secondary btn-sm" type="button">Slett valgt hotspot</button>
                 <button id="screenEditorAddPulseBtn" class="btn btn-secondary btn-sm" type="button">Ny pulse</button>
@@ -263,10 +270,16 @@
                   <input id="screenEditorHotspotName" class="screen-editor-input" type="text" placeholder="Butikknavn eller etikett" />
                 </div>
                 <div class="form-group">
-                  <label class="checkbox-label">
-                    <input id="screenEditorPopupEnabled" type="checkbox" />
-                    <span>Aktiver popup for hotspot</span>
-                  </label>
+                  <label class="form-label" for="screenEditorHotspotAction">Handling</label>
+                  <select id="screenEditorHotspotAction" class="screen-editor-input">
+                    <option value="none">Ingen handling</option>
+                    <option value="navigate">Naviger til side</option>
+                    <option value="popup">Vis popup</option>
+                  </select>
+                </div>
+                <div id="screenEditorNavigateFields" class="form-group hidden">
+                  <label class="form-label" for="screenEditorHotspotGoTarget">Målside</label>
+                  <select id="screenEditorHotspotGoTarget" class="screen-editor-input"></select>
                 </div>
                 <div id="screenEditorPopupFields" class="form-group hidden">
                   <label class="form-label" for="screenEditorStoreId">Butikk-ID (valgfritt)</label>
