@@ -82,6 +82,19 @@ function getPublicUrl(bucket, fullPath) {
   return res?.data?.publicUrl || res?.publicURL || res?.publicUrl || '';
 }
 
+async function storageFileExists(bucket, folderPath, fileName) {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+
+  const { data, error } = await supabase.storage.from(bucket).list(folderPath, {
+    limit: 200,
+    offset: 0,
+  });
+
+  if (error || !Array.isArray(data)) return false;
+  return data.some((item) => item?.name === fileName);
+}
+
 /** Load ads list from storage */
 async function loadAds() {
   const supabase = getSupabase();
@@ -133,6 +146,9 @@ async function loadPlaylist() {
     const supabase = getSupabase();
     if (!supabase) return null;
     const cfg = getCfg();
+    const adsFolder = `installs/${cfg.installSlug}/assets/ads`;
+    const hasPlaylist = await storageFileExists(cfg.bucket, adsFolder, 'playlist.json');
+    if (!hasPlaylist) return null;
     const playlistPath = `installs/${cfg.installSlug}/assets/ads/playlist.json`;
     
     const { data, error } = await supabase.storage
@@ -488,15 +504,19 @@ async function renderWeatherSettings(containerEl) {
     const supabase = getSupabase();
     if (supabase) {
       const cfg = getCfg();
-      const settingsPath = `installs/${cfg.installSlug}/assets/settings.json`;
-      const { data, error } = await supabase.storage.from(cfg.bucket).download(settingsPath);
-      
-      if (!error && data) {
-        const text = await data.text();
-        const settings = JSON.parse(text);
-        if (settings.weather) {
-          document.getElementById('weatherEnabled').checked = settings.weather.enabled;
-          document.getElementById('weatherLocation').value = settings.weather.location || 'Trondheim, NO';
+      const assetsFolder = `installs/${cfg.installSlug}/assets`;
+      const hasSettings = await storageFileExists(cfg.bucket, assetsFolder, 'settings.json');
+      if (hasSettings) {
+        const settingsPath = `installs/${cfg.installSlug}/assets/settings.json`;
+        const { data, error } = await supabase.storage.from(cfg.bucket).download(settingsPath);
+
+        if (!error && data) {
+          const text = await data.text();
+          const settings = JSON.parse(text);
+          if (settings.weather) {
+            document.getElementById('weatherEnabled').checked = settings.weather.enabled;
+            document.getElementById('weatherLocation').value = settings.weather.location || 'Trondheim, NO';
+          }
         }
       }
     }
