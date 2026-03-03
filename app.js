@@ -406,6 +406,30 @@ const bgB = document.getElementById('bgB');
 let bgToken = 0;
 let bgFront = 'A';         // which layer is currently visible
 let bgCurrent = '';
+const BG_FADE_MS = 260;
+
+const bgWarmupSet = new Set();
+
+function warmupBackground(url) {
+  if (!url || bgWarmupSet.has(url)) return;
+  bgWarmupSet.add(url);
+
+  // warm image decode/cache to avoid first-transition hiccup
+  const img = new Image();
+  img.decoding = 'async';
+  img.src = url;
+  if (typeof img.decode === 'function') {
+    img.decode().catch(() => {});
+  }
+
+  // also warm size cache used by fit-layout calculations
+  ensureImageSize(url).catch(() => {});
+}
+
+function warmupAllBackgrounds() {
+  Object.values(ASSETS || {}).forEach((url) => warmupBackground(url));
+  Object.values(SCREENS || {}).forEach((cfg) => warmupBackground(cfg?.bg));
+}
 
 function crossfadeBackground(url){
   const token = ++bgToken;
@@ -431,14 +455,15 @@ function crossfadeBackground(url){
 
   // ensure back starts hidden, then fade it in
   backEl.style.opacity = '0';
-  void backEl.offsetHeight;
 
-  // always fade-in back
+  // use double-rAF instead of forced reflow for smoother transition
   requestAnimationFrame(() => {
-    if(token !== bgToken) return;
-    backEl.style.opacity = '1';
-    // fade out front (unless nothing there)
-    frontEl.style.opacity = same ? '1' : '0';
+    requestAnimationFrame(() => {
+      if(token !== bgToken) return;
+      backEl.style.opacity = '1';
+      // fade out front (unless nothing there)
+      frontEl.style.opacity = same ? '1' : '0';
+    });
   });
 
   // after transition, swap “front”
@@ -451,7 +476,7 @@ function crossfadeBackground(url){
     }
     bgFront = (bgFront === 'A') ? 'B' : 'A';
     bgCurrent = url;
-  }, 300);
+  }, BG_FADE_MS + 40);
 }
 
 // keep name so resten av koden din funker
@@ -1637,6 +1662,9 @@ function init(){
 
   // ensure admin link visibility follows debug
   updateAdminLink();
+
+  // warm known backgrounds early so first transitions feel smooth
+  warmupAllBackgrounds();
 
   // setup onboarding UI elements
   createTouchHint();
