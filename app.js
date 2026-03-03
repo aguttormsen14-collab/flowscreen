@@ -233,6 +233,164 @@ const SCREENS = {
   }
 };
 
+function cloneJson(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+const SCREENS_DEFAULT = cloneJson(SCREENS);
+const SCREEN_ORDER_DEFAULT = [...SCREEN_ORDER];
+let screensConfigSource = 'hardcoded';
+
+function resolveScreenBackground(rawBg, screenId) {
+  if (typeof rawBg !== 'string' || !rawBg.trim()) {
+    return ASSETS[screenId] || '';
+  }
+  const bg = rawBg.trim();
+  if (bg.startsWith('http://') || bg.startsWith('https://') || bg.startsWith('data:') || bg.startsWith('/')) {
+    return bg;
+  }
+  if (bg.includes('/')) {
+    return bg;
+  }
+  return `${SCREEN_ASSETS}/${bg}`;
+}
+
+function normalizeScreenItem(screenId, item) {
+  if (!item || typeof item !== 'object') return null;
+
+  const hotspots = Array.isArray(item.hotspots)
+    ? item.hotspots
+        .filter((hotspot) => hotspot && typeof hotspot === 'object')
+        .map((hotspot, idx) => ({
+          id: String(hotspot.id || `${screenId}_hotspot_${idx}`),
+          x: Number(hotspot.x),
+          y: Number(hotspot.y),
+          w: Number(hotspot.w),
+          h: Number(hotspot.h),
+          go: hotspot.go ? String(hotspot.go) : undefined,
+          label: hotspot.label ? String(hotspot.label) : undefined,
+          storeId: hotspot.storeId ? String(hotspot.storeId) : undefined,
+        }))
+        .filter((hotspot) => Number.isFinite(hotspot.x) && Number.isFinite(hotspot.y) && Number.isFinite(hotspot.w) && Number.isFinite(hotspot.h))
+    : [];
+
+  const pulses = Array.isArray(item.pulses)
+    ? item.pulses
+        .filter((pulse) => pulse && typeof pulse === 'object')
+        .map((pulse, idx) => ({
+          id: String(pulse.id || `${screenId}_pulse_${idx}`),
+          x: Number(pulse.x),
+          y: Number(pulse.y),
+        }))
+        .filter((pulse) => Number.isFinite(pulse.x) && Number.isFinite(pulse.y))
+    : [];
+
+  return {
+    bg: resolveScreenBackground(item.bg, screenId),
+    hotspots,
+    pulses,
+  };
+}
+
+function normalizeRemoteScreensConfig(rawConfig) {
+  const candidate = rawConfig && typeof rawConfig === 'object' ? rawConfig : null;
+  if (!candidate) return null;
+
+  const screenMap = candidate.screens && typeof candidate.screens === 'object' && !Array.isArray(candidate.screens)
+    ? candidate.screens
+    : (Array.isArray(candidate) ? null : candidate);
+
+  if (!screenMap || typeof screenMap !== 'object') return null;
+
+  const normalizedScreens = {};
+  Object.entries(screenMap).forEach(([screenId, item]) => {
+    if (!screenId) return;
+    const normalized = normalizeScreenItem(String(screenId), item);
+    if (normalized) normalizedScreens[String(screenId)] = normalized;
+  });
+
+  if (!normalizedScreens.idle) return null;
+
+  let nextOrder = Array.isArray(candidate.screenOrder) ? candidate.screenOrder.map((id) => String(id)) : Object.keys(normalizedScreens);
+  nextOrder = nextOrder.filter((id, idx) => normalizedScreens[id] && nextOrder.indexOf(id) === idx);
+  if (!nextOrder.includes('idle')) nextOrder.unshift('idle');
+
+  return {
+    screens: normalizedScreens,
+    order: nextOrder,
+  };
+}
+
+function applyScreensConfig(nextScreens, nextOrder, sourceLabel) {
+  Object.keys(SCREENS).forEach((key) => delete SCREENS[key]);
+  Object.entries(nextScreens).forEach(([key, value]) => {
+    SCREENS[key] = value;
+  });
+
+  SCREEN_ORDER.splice(0, SCREEN_ORDER.length, ...nextOrder);
+  screensConfigSource = sourceLabel || 'unknown';
+}
+
+function resetToDefaultScreensConfig() {
+  applyScreensConfig(cloneJson(SCREENS_DEFAULT), [...SCREEN_ORDER_DEFAULT], 'hardcoded');
+}
+
+async function loadScreensConfigFromSupabase() {
+  const supabase = getSupabase();
+  if (!supabase || typeof window.getSupabaseConfig !== 'function') {
+    resetToDefaultScreensConfig();
+    return false;
+  }
+
+  const cfg = window.getSupabaseConfig();
+  if (!cfg || !cfg.bucket || !cfg.installSlug) {
+    resetToDefaultScreensConfig();
+    return false;
+  }
+
+  const folderPath = `installs/${cfg.installSlug}/config`;
+  const fileName = 'screens.json';
+  const filePath = `${folderPath}/${fileName}`;
+
+  try {
+    const { data: folderItems, error: folderErr } = await supabase.storage.from(cfg.bucket).list(folderPath, {
+      limit: 200,
+      offset: 0,
+    });
+
+    const exists = !folderErr && Array.isArray(folderItems) && folderItems.some((item) => item?.name === fileName);
+    if (!exists) {
+      console.log('[SCREENS] Using hardcoded config (no screens.json found at', filePath + ')');
+      resetToDefaultScreensConfig();
+      return false;
+    }
+
+    const { data, error } = await supabase.storage.from(cfg.bucket).download(filePath);
+    if (error || !data) {
+      console.warn('[SCREENS] Failed to download screens.json, using hardcoded config:', error?.message || error);
+      resetToDefaultScreensConfig();
+      return false;
+    }
+
+    const text = await data.text();
+    const parsed = JSON.parse(text);
+    const normalized = normalizeRemoteScreensConfig(parsed);
+    if (!normalized) {
+      console.warn('[SCREENS] Invalid screens.json format, using hardcoded config');
+      resetToDefaultScreensConfig();
+      return false;
+    }
+
+    applyScreensConfig(normalized.screens, normalized.order, 'supabase');
+    console.log('[SCREENS] Loaded screens config from Supabase:', filePath);
+    return true;
+  } catch (e) {
+    console.warn('[SCREENS] Error while loading screens.json, using hardcoded config:', e?.message || e);
+    resetToDefaultScreensConfig();
+    return false;
+  }
+}
+
 // allowed file extensions for ads (storage listing)
 const ADS_EXT = ['.jpg','.jpeg','.png','.webp','.mp4'];
 let AD_DURATION_MS = 8000;
@@ -1821,6 +1979,14 @@ function init(){
 const SUPABASE_INIT_MAX_WAIT_MS = 10000;
 let supabaseInitStartTs = 0;
 let supabaseWaitLogTs = 0;
+let screensConfigInitialized = false;
+
+function startAdsPollingLoop() {
+  console.log('[APP] supabase ready → starting ads polling');
+  loadAdsFromSupabase();
+  if (adsPollTimer) clearInterval(adsPollTimer);
+  adsPollTimer = setInterval(loadAdsFromSupabase, 15000);
+}
 
 function startWhenSupabaseReady(){
   if (!supabaseInitStartTs) {
@@ -1860,17 +2026,38 @@ function startWhenSupabaseReady(){
   supabaseInitStartTs = 0;
   supabaseWaitLogTs = 0;
 
-  console.log('[APP] supabase ready → starting ads polling');
-  loadAdsFromSupabase();
-  if (adsPollTimer) clearInterval(adsPollTimer);
-  adsPollTimer = setInterval(loadAdsFromSupabase, 15000);
+  if (!screensConfigInitialized) {
+    screensConfigInitialized = true;
+    loadScreensConfigFromSupabase()
+      .then(() => {
+        if (currentScreen) {
+          const nextScreen = SCREENS[currentScreen] ? currentScreen : 'idle';
+          setScreen(nextScreen);
+          if (nextScreen === 'idle') {
+            showIdleBackground();
+          }
+        }
+      })
+      .catch((e) => {
+        console.warn('[SCREENS] init failed:', e?.message || e);
+      })
+      .finally(() => {
+        startAdsPollingLoop();
+      });
+    return;
+  }
+
+  startAdsPollingLoop();
 }
 
 // Expose API for debugging
 window.__kiosk = {
   setScreen,
   SCREENS,
+  SCREEN_ORDER,
   setDebugMode,
+  loadScreensConfigFromSupabase,
+  getScreensConfigSource: () => screensConfigSource,
   openAdmin: () => { toggleAdminPanel(); }
 };
 
