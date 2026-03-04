@@ -524,6 +524,7 @@ const screenEditorState = {
   queued: false,
   popupDesignerInitialized: false,
   resizeBound: false,
+  resizeTimer: null,
   viewportBound: false,
   viewport: {
     scale: 1,
@@ -1324,6 +1325,16 @@ function renderSelectedHotspotPanel() {
   renderPopupDesignerPreview(hotspot);
 }
 
+function syncSelectedHotspotStageVisual() {
+  const hotspot = getSelectedHotspot();
+  if (!hotspot || !screenEditorState.selectedHotspotId) return;
+
+  const hotspotEl = document.querySelector(`#screenEditorStage .screen-editor-hotspot[data-hotspot-id="${screenEditorState.selectedHotspotId}"]`);
+  if (!hotspotEl) return;
+
+  updateScreenEditorHotspotVisual(hotspotEl, hotspot);
+}
+
 function updateScreenEditorPulseVisual(element, pulse) {
   element.style.left = `${pulse.x * 100}%`;
   element.style.top = `${pulse.y * 100}%`;
@@ -1769,8 +1780,13 @@ function bindHotspotPanelEvents() {
       }
     }
 
-    renderScreenEditorStage();
-    renderSelectedHotspotPanel();
+    syncSelectedHotspotStageVisual();
+    renderPopupDesignerPreview(hotspot);
+
+    if (reason === 'hotspot-action') {
+      updateHotspotActionFieldVisibility();
+    }
+
     scheduleScreenEditorAutosave(reason);
   };
 
@@ -2062,7 +2078,13 @@ async function initScreenEditor(supabase, cfg) {
   if (!screenEditorState.resizeBound) {
     window.addEventListener('resize', () => {
       if (!screenEditorState.data || !screenEditorState.currentScreenId) return;
-      renderScreenEditorStage();
+      if (screenEditorState.resizeTimer) {
+        clearTimeout(screenEditorState.resizeTimer);
+      }
+      screenEditorState.resizeTimer = setTimeout(() => {
+        screenEditorState.resizeTimer = null;
+        renderScreenEditorStage();
+      }, 100);
     });
     screenEditorState.resizeBound = true;
   }
