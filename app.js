@@ -92,21 +92,6 @@ function stopAdsNow() {
   adsRunning = false;
 }
 
-// SINGLE SOURCE OF TRUTH for ads countdown reset
-// This function ONLY stops timers/ads, does NOT schedule new ones
-// Scheduling happens explicitly in setScreen() when entering idle
-function resetAdsCountdown(reason) {
-  // Always stop any running ads timer
-  stopIdleToAdsTimer();
-  
-  // If ads are currently running, stop them
-  if (adsRunning) {
-    stopAdsNow();
-  }
-  
-  // Note: we do NOT schedule new timer here
-}
-
 function isAdsScreen(id) {
   return id === "ads" || id === "ad" || (id && id.includes("reklame"));
 }

@@ -310,13 +310,7 @@ function renderAdsListFromCache(containerEl) {
     ? cachedAds.filter((ad) => String(ad.name || '').toLowerCase().includes(query))
     : cachedAds;
 
-  if (summaryEl) {
-    const total = cachedAds.length;
-    const shown = filteredAds.length;
-    summaryEl.textContent = query
-      ? `Viser ${shown} av ${total} filer`
-      : `${total} filer i biblioteket`;
-  }
+  updateAdsSummary(summaryEl, query, filteredAds.length, cachedAds.length);
 
   if (cachedAds.length === 0) {
     containerEl.innerHTML =
@@ -330,19 +324,24 @@ function renderAdsListFromCache(containerEl) {
     return;
   }
 
-  let html = '';
-  filteredAds.forEach((ad) => {
-    const isVideo = ad.type === 'video';
-    // ===== SECURITY: Escape filename for safe HTML rendering =====
-    const escapedName = escapeHtml(ad.name);
-    const escapedPath = escapeHtml(ad.path);
-    const escapedUrl = escapeHtml(ad.publicUrl);
-    
-    const thumb = isVideo
-      ? `<div class="asset-thumb"><div style="width:100%;height:100%;background:#1e7bb8;display:flex;align-items:center;justify-content:center;border-radius:6px;"><span style="color:#fff;font-size:28px;">🎬</span></div></div>`
-      : `<div class="asset-thumb"><img src="${escapedUrl}" alt="${escapedName}" onerror="this.style.display='none';"></div>`;
+  containerEl.innerHTML = filteredAds.map(renderAdRow).join('');
+}
 
-    html += `
+function updateAdsSummary(summaryEl, query, shownCount, totalCount) {
+  if (!summaryEl) return;
+  summaryEl.textContent = query
+    ? `Viser ${shownCount} av ${totalCount} filer`
+    : `${totalCount} filer i biblioteket`;
+}
+
+function renderAdRow(ad) {
+  const isVideo = ad.type === 'video';
+  const escapedName = escapeHtml(ad.name);
+  const escapedPath = escapeHtml(ad.path);
+  const escapedUrl = escapeHtml(ad.publicUrl);
+  const thumb = renderAdThumb(isVideo, escapedUrl, escapedName);
+
+  return `
       <div class="asset-row">
         ${thumb}
         <div class="asset-info">
@@ -356,9 +355,13 @@ function renderAdsListFromCache(containerEl) {
         </div>
       </div>
     `;
-  });
+}
 
-  containerEl.innerHTML = html;
+function renderAdThumb(isVideo, escapedUrl, escapedName) {
+  if (isVideo) {
+    return '<div class="asset-thumb"><div style="width:100%;height:100%;background:#1e7bb8;display:flex;align-items:center;justify-content:center;border-radius:6px;"><span style="color:#fff;font-size:28px;">🎬</span></div></div>';
+  }
+  return `<div class="asset-thumb"><img src="${escapedUrl}" alt="${escapedName}" onerror="this.style.display='none';"></div>`;
 }
 
 /** Copy URL to clipboard */
@@ -453,11 +456,7 @@ async function renderPlaylistEditor(containerEl) {
   const playlist = await loadPlaylist();
   const playlistItems = playlist?.items || [];
 
-  let html = '<div class="playlist-editor">';
-  html += '<div class="playlist-editor-head">';
-  html += '<h3 class="playlist-editor-title">Spilleliste</h3>';
-  html += '<p class="playlist-editor-subtitle">Velg hvilke filer som skal spilles og sett varighet per fil.</p>';
-  html += '</div>';
+  let html = renderPlaylistHeader();
 
   if (ads.length === 0) {
     html += '<div class="asset-empty">Ingen reklamer lastet opp ennå.</div>';
@@ -465,7 +464,29 @@ async function renderPlaylistEditor(containerEl) {
     return;
   }
 
-  html += `
+  html += renderPlaylistTools();
+  html += '<div id="playlistItems" class="playlist-items">';
+  html += ads.map((ad) => renderPlaylistItem(ad, playlistItems)).join('');
+  html += '</div>';
+  html += renderPlaylistActions();
+  html += '</div>';
+  
+  containerEl.innerHTML = html;
+
+  bindPlaylistEditorActions(containerEl);
+}
+
+function renderPlaylistHeader() {
+  let html = '<div class="playlist-editor">';
+  html += '<div class="playlist-editor-head">';
+  html += '<h3 class="playlist-editor-title">Spilleliste</h3>';
+  html += '<p class="playlist-editor-subtitle">Velg hvilke filer som skal spilles og sett varighet per fil.</p>';
+  html += '</div>';
+  return html;
+}
+
+function renderPlaylistTools() {
+  return `
     <div class="playlist-tools">
       <div class="playlist-tools-actions">
         <button id="playlistSelectAllBtn" class="btn btn-secondary btn-sm" type="button">Velg alle</button>
@@ -474,18 +495,16 @@ async function renderPlaylistEditor(containerEl) {
       <p id="playlistSummary" class="playlist-summary">0 valgt</p>
     </div>
   `;
+}
 
-  html += '<div id="playlistItems" class="playlist-items">';
-  
-  for (let i = 0; i < ads.length; i++) {
-    const ad = ads[i];
-    const playlistItem = playlistItems.find(p => p.filename === ad.name);
-    const isChecked = !!playlistItem;
-    const duration = playlistItem?.duration || 8000;
-    const mediaLabel = ad.type === 'video' ? 'Video' : 'Bilde';
-    const escapedName = escapeHtml(ad.name);
-    
-    html += `
+function renderPlaylistItem(ad, playlistItems) {
+  const playlistItem = playlistItems.find((p) => p.filename === ad.name);
+  const isChecked = !!playlistItem;
+  const duration = playlistItem?.duration || 8000;
+  const mediaLabel = ad.type === 'video' ? 'Video' : 'Bilde';
+  const escapedName = escapeHtml(ad.name);
+
+  return `
       <div class="playlist-item" data-filename="${escapedName}">
         <label class="playlist-item-toggle">
           <input type="checkbox" class="playlist-checkbox" data-filename="${escapedName}" ${isChecked ? 'checked' : ''}>
@@ -500,26 +519,25 @@ async function renderPlaylistEditor(containerEl) {
         </div>
       </div>
     `;
-  }
-  
-  html += '</div>';
-  html += `
+}
+
+function renderPlaylistActions() {
+  return `
     <div class="playlist-actions">
       <button id="savePlaylistBtn" class="btn btn-primary" type="button">Lagre spilleliste</button>
       <p id="playlistSaveStatus" class="message"></p>
     </div>
   `;
-  html += '</div>';
-  
-  containerEl.innerHTML = html;
+}
 
+function bindPlaylistEditorActions(containerEl) {
   const summaryEl = containerEl.querySelector('#playlistSummary');
   const saveStatusEl = containerEl.querySelector('#playlistSaveStatus');
   const checkboxes = Array.from(containerEl.querySelectorAll('.playlist-checkbox'));
 
   const updateSummary = () => {
     const selected = checkboxes.filter((cb) => cb.checked).length;
-    summaryEl.textContent = `${selected} valgt`;
+    if (summaryEl) summaryEl.textContent = `${selected} valgt`;
   };
 
   updateSummary();
@@ -533,44 +551,52 @@ async function renderPlaylistEditor(containerEl) {
 
   if (selectAllBtn) {
     selectAllBtn.addEventListener('click', () => {
-      checkboxes.forEach((checkbox) => { checkbox.checked = true; });
+      checkboxes.forEach((checkbox) => {
+        checkbox.checked = true;
+      });
       updateSummary();
     });
   }
 
   if (clearBtn) {
     clearBtn.addEventListener('click', () => {
-      checkboxes.forEach((checkbox) => { checkbox.checked = false; });
+      checkboxes.forEach((checkbox) => {
+        checkbox.checked = false;
+      });
       updateSummary();
     });
   }
-  
-  // Bind save button
+
   const saveBtn = containerEl.querySelector('#savePlaylistBtn');
-  if (saveBtn) {
-    saveBtn.addEventListener('click', async () => {
-      const items = [];
-      containerEl.querySelectorAll('.playlist-checkbox:checked').forEach(cb => {
-        const filename = cb.dataset.filename;
-        const row = cb.closest('.playlist-item');
-        const durationInput = row ? row.querySelector('.playlist-duration') : null;
-        const seconds = Math.max(1, Math.min(60, parseInt(durationInput?.value, 10) || 8));
-        const duration = seconds * 1000;
-        items.push({ filename, duration });
-      });
-      
-      const newPlaylist = { items };
-      if (saveStatusEl) {
-        saveStatusEl.textContent = 'Lagrer spilleliste…';
-      }
-      const success = await savePlaylist(newPlaylist);
-      if (success) {
-        if (saveStatusEl) saveStatusEl.textContent = '✅ Spilleliste lagret';
-      } else {
-        if (saveStatusEl) saveStatusEl.textContent = '❌ Feil ved lagring av spilleliste';
-      }
-    });
-  }
+  if (!saveBtn) return;
+
+  saveBtn.addEventListener('click', async () => {
+    const items = collectPlaylistItems(containerEl);
+    const newPlaylist = { items };
+
+    if (saveStatusEl) {
+      saveStatusEl.textContent = 'Lagrer spilleliste…';
+    }
+
+    const success = await savePlaylist(newPlaylist);
+    if (saveStatusEl) {
+      saveStatusEl.textContent = success
+        ? '✅ Spilleliste lagret'
+        : '❌ Feil ved lagring av spilleliste';
+    }
+  });
+}
+
+function collectPlaylistItems(containerEl) {
+  const items = [];
+  containerEl.querySelectorAll('.playlist-checkbox:checked').forEach((checkbox) => {
+    const filename = checkbox.dataset.filename;
+    const row = checkbox.closest('.playlist-item');
+    const durationInput = row ? row.querySelector('.playlist-duration') : null;
+    const seconds = Math.max(1, Math.min(60, parseInt(durationInput?.value, 10) || 8));
+    items.push({ filename, duration: seconds * 1000 });
+  });
+  return items;
 }
 
 // AUDIT: Render weather settings editor
