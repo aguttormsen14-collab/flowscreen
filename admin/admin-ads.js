@@ -720,6 +720,14 @@ async function renderLayoutSettings(containerEl) {
             <option value="default">Standard (normal fullskjerm)</option>
             <option value="bottom-weather">Delt: værstripe nederst</option>
             <option value="split-ads-weather">Delt: reklame venstre / vær høyre</option>
+            <option value="ads-map-preview">Interaktiv: reklame 75% + kart 25%</option>
+          </select>
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 4px; font-size: 13px;">Animasjonsstil (interaktiv modus):</label>
+          <select id="layoutAnimProfile" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px;">
+            <option value="subtle">Subtil</option>
+            <option value="wow">Demo wow</option>
           </select>
         </div>
         <button id="saveLayoutBtn" class="btn btn-primary" style="width: 100%;">Lagre layoutvalg</button>
@@ -730,22 +738,28 @@ async function renderLayoutSettings(containerEl) {
   `;
 
   const selectEl = containerEl.querySelector('#layoutMode');
+  const animSelectEl = containerEl.querySelector('#layoutAnimProfile');
   const saveBtn = containerEl.querySelector('#saveLayoutBtn');
   const statusEl = containerEl.querySelector('#layoutSaveStatus');
-  if (!selectEl || !saveBtn) return;
+  if (!selectEl || !animSelectEl || !saveBtn) return;
 
   try {
     const settings = await loadInstallSettings();
     const currentMode = settings?.screenLayout?.mode || 'default';
-    selectEl.value = ['default', 'bottom-weather', 'split-ads-weather'].includes(currentMode)
+    const currentAnim = settings?.screenLayout?.animationProfile || 'subtle';
+    selectEl.value = ['default', 'bottom-weather', 'split-ads-weather', 'ads-map-preview'].includes(currentMode)
       ? currentMode
       : 'default';
+    animSelectEl.value = ['subtle', 'wow'].includes(currentAnim)
+      ? currentAnim
+      : 'subtle';
   } catch (e) {
     console.warn('[LAYOUT] Load error:', e.message);
   }
 
   saveBtn.addEventListener('click', async () => {
     const mode = selectEl.value || 'default';
+    const animationProfile = animSelectEl.value || 'subtle';
     if (statusEl) statusEl.textContent = 'Lagrer layout…';
 
     const current = await loadInstallSettings();
@@ -753,6 +767,7 @@ async function renderLayoutSettings(containerEl) {
       ...current,
       screenLayout: {
         mode,
+        animationProfile,
         updatedAt: new Date().toISOString(),
       },
     });

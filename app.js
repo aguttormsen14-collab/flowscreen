@@ -426,7 +426,10 @@ let screensConfigSource = 'hardcoded';
 const SCREENS_CONFIG_FILE = 'screens.json';
 const PLAYER_SETTINGS_FILE = 'settings.json';
 const LAYOUT_MODE_DEFAULT = 'default';
-const PLAYER_LAYOUT_MODES = new Set(['default', 'bottom-weather', 'split-ads-weather']);
+const INTERACTIVE_AD_LAYOUT_MODE = 'ads-map-preview';
+const PLAYER_LAYOUT_MODES = new Set(['default', 'bottom-weather', 'split-ads-weather', INTERACTIVE_AD_LAYOUT_MODE]);
+const ADS_ANIMATION_PROFILE_DEFAULT = 'subtle';
+const ADS_ANIMATION_PROFILES = new Set(['subtle', 'wow']);
 const PLAYER_SETTINGS_DEFAULT = Object.freeze({
   weather: Object.freeze({
     enabled: false,
@@ -434,12 +437,15 @@ const PLAYER_SETTINGS_DEFAULT = Object.freeze({
   }),
   screenLayout: Object.freeze({
     mode: LAYOUT_MODE_DEFAULT,
+    animationProfile: ADS_ANIMATION_PROFILE_DEFAULT,
   }),
 });
 let playerSettings = {
   weather: { ...PLAYER_SETTINGS_DEFAULT.weather },
   screenLayout: { ...PLAYER_SETTINGS_DEFAULT.screenLayout },
 };
+let runtimeLayoutMode = LAYOUT_MODE_DEFAULT;
+let adsTapTransitionLock = false;
 const SCREENS_AUTOSAVE_DELAY_MS = 700;
 let screensAutosaveTimer = null;
 let screensSaveInFlight = false;
@@ -826,6 +832,25 @@ function ensureWeatherPanel() {
   return panel;
 }
 
+function ensureMapPreviewPanel() {
+  let panel = document.getElementById('playerMapPreviewPanel');
+  if (panel) return panel;
+
+  panel = document.createElement('aside');
+  panel.id = 'playerMapPreviewPanel';
+  panel.className = 'player-map-preview-panel hidden';
+  panel.setAttribute('aria-hidden', 'true');
+  panel.innerHTML = `
+    <div class="player-map-preview-inner">
+      <p class="player-map-preview-title">Kart</p>
+      <div id="playerMapPreviewSurface" class="player-map-preview-surface"></div>
+      <p class="player-map-preview-hint">Trykk for å åpne full meny</p>
+    </div>
+  `;
+  document.body.appendChild(panel);
+  return panel;
+}
+
 function getLayoutModeFromSettings(settings) {
   const mode = String(settings?.screenLayout?.mode || LAYOUT_MODE_DEFAULT).trim();
   return PLAYER_LAYOUT_MODES.has(mode) ? mode : LAYOUT_MODE_DEFAULT;
@@ -835,7 +860,8 @@ function applyPlayerLayoutMode(mode) {
   const body = document.body;
   if (!body) return;
 
-  body.classList.remove('layout-default', 'layout-bottom-weather', 'layout-split-ads-weather');
+  runtimeLayoutMode = mode;
+  body.classList.remove('layout-default', 'layout-bottom-weather', 'layout-split-ads-weather', 'layout-ads-map-preview', 'ads-transition-out');
 
   switch (mode) {
     case 'bottom-weather':
@@ -844,10 +870,51 @@ function applyPlayerLayoutMode(mode) {
     case 'split-ads-weather':
       body.classList.add('layout-split-ads-weather');
       break;
+    case INTERACTIVE_AD_LAYOUT_MODE:
+      body.classList.add('layout-ads-map-preview');
+      break;
     default:
       body.classList.add('layout-default');
       break;
   }
+}
+
+function getAnimationProfileFromSettings(settings) {
+  const profile = String(settings?.screenLayout?.animationProfile || ADS_ANIMATION_PROFILE_DEFAULT).trim().toLowerCase();
+  return ADS_ANIMATION_PROFILES.has(profile) ? profile : ADS_ANIMATION_PROFILE_DEFAULT;
+}
+
+function applyAdAnimationProfile(profile) {
+  const body = document.body;
+  if (!body) return;
+
+  body.classList.remove('ads-anim-subtle', 'ads-anim-wow');
+  body.classList.add(profile === 'wow' ? 'ads-anim-wow' : 'ads-anim-subtle');
+}
+
+function shouldUseInteractiveAdsLayout() {
+  return playerSettings?.screenLayout?.mode === INTERACTIVE_AD_LAYOUT_MODE && (adsRunning || isAdsScreen(currentScreen));
+}
+
+function syncRuntimeLayoutMode() {
+  const configuredMode = getLayoutModeFromSettings(playerSettings);
+  const nextMode = configuredMode === INTERACTIVE_AD_LAYOUT_MODE
+    ? (shouldUseInteractiveAdsLayout() ? INTERACTIVE_AD_LAYOUT_MODE : LAYOUT_MODE_DEFAULT)
+    : configuredMode;
+  applyPlayerLayoutMode(nextMode);
+}
+
+function updateMapPreviewPanel() {
+  const panel = ensureMapPreviewPanel();
+  const surface = document.getElementById('playerMapPreviewSurface');
+  if (!panel || !surface) return;
+
+  const active = runtimeLayoutMode === INTERACTIVE_AD_LAYOUT_MODE;
+  panel.classList.toggle('hidden', !active);
+  if (!active) return;
+
+  const mapPreviewUrl = SCREENS.map1?.bg || ASSETS.map1;
+  surface.style.backgroundImage = mapPreviewUrl ? `url("${mapPreviewUrl}")` : 'none';
 }
 
 function applyWeatherPanelFromSettings(settings) {
@@ -858,7 +925,7 @@ function applyWeatherPanelFromSettings(settings) {
   const weatherEnabled = settings?.weather?.enabled === true;
   const location = String(settings?.weather?.location || PLAYER_SETTINGS_DEFAULT.weather.location);
 
-  if (mode === 'default') {
+  if (mode === 'default' || mode === INTERACTIVE_AD_LAYOUT_MODE) {
     panel.classList.add('hidden');
     return;
   }
@@ -879,6 +946,7 @@ function normalizePlayerSettings(raw) {
   const locationRaw = String(raw?.weather?.location || PLAYER_SETTINGS_DEFAULT.weather.location).trim();
   const location = locationRaw || PLAYER_SETTINGS_DEFAULT.weather.location;
   const mode = getLayoutModeFromSettings(raw);
+  const animationProfile = getAnimationProfileFromSettings(raw);
 
   return {
     weather: {
@@ -887,14 +955,17 @@ function normalizePlayerSettings(raw) {
     },
     screenLayout: {
       mode,
+      animationProfile,
     },
   };
 }
 
 function applyPlayerSettings(raw) {
   playerSettings = normalizePlayerSettings(raw);
-  applyPlayerLayoutMode(playerSettings.screenLayout.mode);
+  applyAdAnimationProfile(playerSettings.screenLayout.animationProfile);
+  syncRuntimeLayoutMode();
   applyWeatherPanelFromSettings(playerSettings);
+  updateMapPreviewPanel();
 }
 
 function applyCachedPlayerSettings(reason = '') {
@@ -1066,6 +1137,8 @@ function ensureAdsLayer(){
 function showAdsOverlay(){
   const layer = ensureAdsLayer();
   clearMapArtifacts();
+  layer.classList.remove('ads-exit-left');
+  document.body.classList.remove('ads-transition-out');
   
   // Close any open store popup before showing ads
   closeStorePopup();
@@ -1076,6 +1149,8 @@ function showAdsOverlay(){
   layer.classList.add('show');
   
   adsRunning = true;
+  syncRuntimeLayoutMode();
+  updateMapPreviewPanel();
   showAdsTapCatcher(); // This enables pointer-events on tap catcher
 }
 
@@ -1085,6 +1160,8 @@ function hideAdsOverlay(){
   layer.classList.add('hidden');
   
   adsRunning = false;
+  syncRuntimeLayoutMode();
+  updateMapPreviewPanel();
   hideAdsTapCatcher(); // This disables pointer-events on tap catcher
 }
 
@@ -1151,6 +1228,44 @@ function hideAdsTapCatcher(){
   el.style.pointerEvents = "none"; // Disable clicks
 }
 function stopAdsIfRunning(){ if(adsRunning && typeof stopAds==='function') stopAds(); }
+
+function finishAdsTapTransitionToMenu() {
+  stopAdsNow();
+  clearMapArtifacts();
+  setScreen('menu');
+  adsTapTransitionLock = false;
+}
+
+function handleAdsTapInteraction(ev) {
+  ev.preventDefault();
+  ev.stopPropagation();
+
+  if (adsTapTransitionLock) return;
+
+  if (playerSettings?.screenLayout?.mode !== INTERACTIVE_AD_LAYOUT_MODE) {
+    stopAdsNow();
+    clearMapArtifacts();
+    setScreen('idle');
+    showIdleBackground();
+    return;
+  }
+
+  const layer = ensureAdsLayer();
+  if (!layer) {
+    finishAdsTapTransitionToMenu();
+    return;
+  }
+
+  adsTapTransitionLock = true;
+  document.body.classList.add('ads-transition-out');
+  layer.classList.add('ads-exit-left');
+
+  setTimeout(() => {
+    layer.classList.remove('ads-exit-left');
+    document.body.classList.remove('ads-transition-out');
+    finishAdsTapTransitionToMenu();
+  }, 380);
+}
 
 function recordTouch() {
   const ts = Date.now();
@@ -1471,6 +1586,8 @@ function setScreen(screenName) {
   }
 
   currentScreen = screenName;
+  syncRuntimeLayoutMode();
+  updateMapPreviewPanel();
   const config = SCREENS[screenName];
 
 clearHotspots();
@@ -2851,6 +2968,7 @@ function init(){
   // setup onboarding UI elements
   createTouchHint();
   ensureWeatherPanel();
+  ensureMapPreviewPanel();
   applyPlayerSettings(PLAYER_SETTINGS_DEFAULT);
   // create tap catcher early (will stay hidden until ads play)
   const catcher = document.createElement('div');
@@ -2859,15 +2977,7 @@ function init(){
   catcher.style.pointerEvents = 'none';
   document.body.appendChild(catcher);
   catcher.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Stop ads and return to idle
-    stopAdsNow();
-    clearMapArtifacts();
-    setScreen('idle');
-    showIdleBackground();
-    // setScreen will start fresh ads timer
+    handleAdsTapInteraction(e);
   });
 
   // global tap handler for non-hotspot taps (reaches when no stopPropagation)
@@ -2880,12 +2990,7 @@ function init(){
     
     // if ads are running: return to idle
     if (adsRunning || isAdsScreen(currentScreen)) {
-      ev.preventDefault();
-      ev.stopPropagation();
-      stopAdsNow();
-      clearMapArtifacts();
-      setScreen('idle');
-      showIdleBackground();
+      handleAdsTapInteraction(ev);
       return;
     }
 
