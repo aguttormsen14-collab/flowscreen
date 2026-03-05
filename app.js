@@ -1134,12 +1134,25 @@ function ensureAdsLayer(){
   div.id = 'adsLayer';
   div.className = 'ads-layer hidden';
   div.style.pointerEvents = 'none'; // ALWAYS none - tap catcher handles interaction
+  div.style.backgroundColor = '#000';
+  div.style.opacity = '1';
   document.body.appendChild(div);
   adsLayer = div;
+
+  // Hard opaque backdrop so transparent creatives never reveal app background.
+  const solidBg = document.createElement('div');
+  solidBg.className = 'ads-solid-bg';
+  solidBg.style.position = 'absolute';
+  solidBg.style.inset = '0';
+  solidBg.style.background = '#000';
+  solidBg.style.zIndex = '0';
+  solidBg.style.pointerEvents = 'none';
+  adsLayer.appendChild(solidBg);
+
   // move video element into overlay
   if(videoEl && videoEl.parentElement !== adsLayer){
     adsLayer.appendChild(videoEl);
-    videoEl.style.zIndex = '1';
+    videoEl.style.zIndex = '2';
     videoEl.style.pointerEvents = 'none'; // CRITICAL: don't block tap-catcher clicks
     // ensure covers the overlay
     videoEl.style.position = 'absolute';
@@ -1147,7 +1160,8 @@ function ensureAdsLayer(){
     videoEl.style.left = '0';
     videoEl.style.width = '100%';
     videoEl.style.height = '100%';
-    videoEl.style.objectFit = 'cover';
+    videoEl.style.objectFit = 'contain';
+    videoEl.style.backgroundColor = '#000';
   }
   return adsLayer;
 }
@@ -1157,6 +1171,8 @@ function showAdsOverlay(){
   clearMapArtifacts();
   layer.classList.remove('ads-exit-left');
   document.body.classList.remove('ads-transition-out');
+  layer.style.backgroundColor = '#000';
+  layer.style.opacity = '1';
   
   // Close any open store popup before showing ads
   closeStorePopup();
@@ -2859,7 +2875,11 @@ function showAdByIndex(i){
 
   const layer = ensureAdsLayer();
   // remove previous image elements if any
-  Array.from(layer.children).forEach(c=>{ if(c !== videoEl) c.remove(); });
+  Array.from(layer.children).forEach((c) => {
+    if (c === videoEl) return;
+    if (c.classList && c.classList.contains('ads-solid-bg')) return;
+    c.remove();
+  });
 
   if(ad.isVideo){
     // check mime/canPlayType
@@ -2877,6 +2897,8 @@ function showAdByIndex(i){
     videoEl.muted = true;
     videoEl.playsInline = true;
     videoEl.preload = 'auto';
+    videoEl.style.backgroundColor = '#000';
+    videoEl.style.objectFit = 'contain';
     videoEl.src = ad.src;
     videoEl.load();
 
@@ -2936,6 +2958,13 @@ function showAdByIndex(i){
     videoEl.style.display = 'none';
     const layer = ensureAdsLayer();
     const img = document.createElement('img');
+    img.style.position = 'absolute';
+    img.style.inset = '0';
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.objectFit = 'contain';
+    img.style.backgroundColor = '#000';
+    img.style.zIndex = '2';
     img.src = ad.src;
     layer.appendChild(img);
     if(adTimer) clearTimeout(adTimer);
