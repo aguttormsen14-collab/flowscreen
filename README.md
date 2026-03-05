@@ -21,3 +21,21 @@ or inject them via a `<script>` tag in your HTML. The bucket name is `saxvik-hub
 files are read from `installs/<installSlug>/assets/ads/`.
 
 The admin dashboard provides drag‑and‑drop upload to that same path.
+
+## New customer setup (1–3 customers)
+
+Use the scaffolding script to create one or more new installs from the
+existing reference install:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\new-install.ps1 -InstallSlugs 'city-lade','city-syd'
+```
+
+If you also want customer-specific entry URLs (redirect pages):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\new-install.ps1 -InstallSlugs 'city-lade' -CreateEntryPages
+```
+
+See `docs/NEW_CUSTOMER_PLAYBOOK.md` for full onboarding (URLs, Supabase Auth,
+`user_roles.install_slug`, and RLS policy notes).

@@ -412,7 +412,7 @@ wc -l app.js  # Should be ~1776 (was ~1650)
 **Using Samsung Galaxy Tab Ultra (or any Android tablet):**
 
 1. **Open app in kiosk mode or just Chrome:**
-   - URL: `https://your-github-pages.io/wayfindaaaar/index.html?install=amfi-steinkjer`
+   - URL: `https://your-host-or-pages-url/?install=amfi-steinkjer`
    - Close Chrome address bar (or use kiosk app)
 
 2. **Run Test Suite C (from PART C above):**
