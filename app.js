@@ -927,12 +927,7 @@ function updateMapPreviewPanel() {
   const surface = document.getElementById('playerMapPreviewSurface');
   if (!panel || !surface) return;
 
-  const active = runtimeLayoutMode === INTERACTIVE_AD_LAYOUT_MODE;
-  panel.classList.toggle('hidden', !active);
-  if (!active) return;
-
-  const mapPreviewUrl = SCREENS.map1?.bg || ASSETS.map1;
-  surface.style.backgroundImage = mapPreviewUrl ? `url("${mapPreviewUrl}")` : 'none';
+  panel.classList.add('hidden');
 }
 
 function applyWeatherPanelFromSettings(settings) {

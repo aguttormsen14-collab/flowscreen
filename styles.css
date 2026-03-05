@@ -36,10 +36,10 @@ body.layout-split-ads-weather {
 }
 
 body.layout-ads-map-preview {
-  --player-main-right: clamp(220px, 25vw, 420px);
+  --player-main-right: 0px;
   --player-main-bottom: 0px;
   --player-weather-size: 0px;
-  --player-preview-size: clamp(220px, 25vw, 420px);
+  --player-preview-size: 0px;
 }
 
 #app {
@@ -338,6 +338,25 @@ body.layout-ads-map-preview.ads-anim-wow .ads-layer.show {
   animation: ads-drift-left-wow 7.5s cubic-bezier(0.45, 0.05, 0.25, 0.98) infinite alternate;
 }
 
+body.layout-ads-map-preview .ads-layer {
+  top: clamp(18px, 3vh, 34px);
+  left: clamp(18px, 3vw, 44px);
+  right: clamp(18px, 3vw, 44px);
+  bottom: clamp(18px, 3vh, 34px);
+  border-radius: clamp(12px, 1.4vw, 20px);
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow:
+    0 18px 42px rgba(2, 6, 23, 0.45),
+    0 0 0 1px rgba(226, 232, 240, 0.08) inset;
+}
+
+body.layout-ads-map-preview .ads-layer img,
+body.layout-ads-map-preview .ads-layer video {
+  object-fit: contain;
+  background: rgba(2, 6, 23, 0.72);
+}
+
 body.layout-ads-map-preview.ads-anim-subtle .ads-layer.ads-exit-left {
   animation: ads-leave-left-subtle 380ms cubic-bezier(0.25, 0.72, 0.22, 1) forwards !important;
 }
@@ -412,6 +431,10 @@ body.layout-ads-map-preview.ads-anim-wow .ads-layer.ads-exit-left {
   border-left: 1px solid rgba(148, 163, 184, 0.26);
   box-sizing: border-box;
   pointer-events: none;
+}
+
+body.layout-ads-map-preview .player-map-preview-panel {
+  display: none !important;
 }
 
 .player-map-preview-inner {
