@@ -131,12 +131,22 @@ async function saveInstallSettings(nextSettings) {
     const cfg = getCfg();
     const settingsPath = getSettingsPath(cfg.installSlug);
     const json = JSON.stringify(nextSettings || {}, null, 2);
+    const payload = new Blob([json], { type: 'application/json' });
 
-    const { error } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from(cfg.bucket)
-      .update(settingsPath, new Blob([json], { type: 'application/json' }), { upsert: true });
+      .upload(settingsPath, payload, {
+        upsert: true,
+        contentType: 'application/json',
+      });
 
-    if (error) throw error;
+    if (!uploadError) return true;
+
+    const { error: updateError } = await supabase.storage
+      .from(cfg.bucket)
+      .update(settingsPath, payload, { upsert: true });
+
+    if (updateError) throw updateError;
     return true;
   } catch (e) {
     console.error('[SETTINGS] Save error:', e.message);
