@@ -6,16 +6,15 @@
   <title>Forretningsplan – Innovasjon Norge (Wayfinding)</title>
   <style>
     @page { size: A4; margin: 18mm 14mm; }
-  <h1>Forretningsplan – Infoskjermer og Wayfinding</h1>
-  <p class="muted">Innovasjon Norge versjon 1.0 • Dato: 5. mars 2026</p>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
       color: #111827;
       line-height: 1.45;
       font-size: 11.5pt;
-    <p><strong>Formål med dokumentet:</strong> Underlag for søknad/dialog med Innovasjon Norge og en realistisk 3-års gjennomføringsplan.</p>
       margin: 0;
       background: #fff;
     }
-  <h2>1. Sammendrag</h2>
+    h1, h2, h3 { color: #0f172a; margin: 0 0 8px 0; }
     h1 { font-size: 22pt; margin-top: 8px; }
     h2 { font-size: 15pt; margin-top: 22px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
     h3 { font-size: 12pt; margin-top: 14px; }
@@ -32,7 +31,7 @@
       margin: 12px 0 18px;
     }
     .kpi {
-    <h2>10. Finansielle prognoser og finansieringsgrunnlag</h2>
+      display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
       margin: 10px 0 14px;
@@ -73,23 +72,26 @@
   </style>
 </head>
 <body>
-  <h1>Business Plan – Software for Infoskjermer og Wayfinding</h1>
-  <p class="muted">Versjon 1.2 • Dato: 5. mars 2026</p>
+  <h1>Forretningsplan – Infoskjermer og Wayfinding</h1>
+  <p class="muted">Innovasjon Norge versjon 1.0 • Dato: 5. mars 2026</p>
   <div class="meta">
     <p><strong>Produkt:</strong> SaaS-plattform for digital signage + interaktiv wayfinding</p>
     <p><strong>Status:</strong> Pilotfase med én aktiv pilotkunde (installasjonsspor: <em>amfi-steinkjer</em>)</p>
+    <p><strong>Formål med dokumentet:</strong> Underlag for søknad/dialog med Innovasjon Norge og en realistisk 3-års gjennomføringsplan.</p>
     <p><strong>Grunnlag:</strong> Planen er basert på kode- og dokumentgjennomgang av eksisterende løsning (player, admin, Supabase-oppsett, sikkerhets- og driftsdokumentasjon).</p>
   </div>
 
-  <h2>1. Executive Summary</h2>
+  <h2>1. Sammendrag</h2>
   <p>Løsningen kombinerer <strong>digital skilting</strong> og <strong>wayfinding</strong> i én plattform for offentlige bygg med mye trafikk. Produktet er designet for touch-kiosker og infoskjermmiljøer hvor man trenger både annonser, sanntidsinformasjon og enkel navigasjon i samme opplevelse.</p>
   <p>Typiske miljøer: kjøpesentre, sykehus, campus, transportknutepunkter, kontorbygg, kulturarenaer og hoteller.</p>
   <ul>
     <li><strong>Kjerneverdi:</strong> Raskere navigasjon for besøkende, færre spørsmål til ansatte, mer relevant informasjon på riktig skjerm.</li>
     <li><strong>Driftsverdi:</strong> Sentral administrasjon, rask oppdatering av innhold, færre manuelle feil.</li>
     <li><strong>Kommersiell verdi:</strong> Kombinerer operativ nytte (wayfinding) med inntektsmulighet via reklameflater.</li>
+    <li><strong>Markedsposisjon:</strong> Midtsegmentet mellom enkel infoskjerm og tunge enterprise-løsninger, med modulær oppgradering etter behov.</li>
   </ul>
   <p><strong>Forretningsmodell:</strong> Abonnement per skjerm/lokasjon, modulprising (signage + wayfinding + integrasjoner), enterprise-avtaler og engangstjenester (kartproduksjon/implementering).</p>
+  <p><strong>Produktmål:</strong> Når løsningen er ferdig utbygget skal den være trygg i drift, priset så flere kan ta den i bruk, og enkel å administrere med funksjoner som er relevante på tvers av små og store virksomheter.</p>
 
   <div class="kpi">
     <div class="kpi-card"><div class="v">12 mnd</div><div class="l">2–4 betalende kunder, 10–25 skjermer</div></div>
@@ -100,32 +102,6 @@
   <h2>2. Problemdefinisjon</h2>
   <p><strong>Problemer produktet løser:</strong></p>
   <ul>
-
-    <h2>12. Planlagt bruk av ekstern finansiering</h2>
-    <p>Ved tildeling av støtte eller lån brukes midlene til å redusere risiko i tidlig fase og dokumentere skalerbar drift før større kommersiell opptrapping.</p>
-    <table>
-      <tr><th>Område</th><th>Formål</th><th>Resultatmål</th></tr>
-      <tr>
-        <td>Produktstabilitet og sikkerhet</td>
-        <td>Herde plattform for flere samtidige lokasjoner og redusere driftsavvik</td>
-        <td>Stabil drift og dokumentert oppetid i pilot og neste kundecase</td>
-      </tr>
-      <tr>
-        <td>Kartproduksjon og implementeringsmetode</td>
-        <td>Standardisere leveranse av kart, hotspots og oppsett</td>
-        <td>Kortere onboardingtid og lavere leveransekost per ny lokasjon</td>
-      </tr>
-      <tr>
-        <td>Kommersialisering</td>
-        <td>Bygge salgsgrunnlag med referansecase, partnerdialog og tilbudsprosess</td>
-        <td>Konvertere pilot til betalende avtaler og etablere repeterbar salgsflyt</td>
-      </tr>
-      <tr>
-        <td>Gjennomføringsevne</td>
-        <td>Dekke grunnleggerlønn i oppbyggingsfase (500 000 kr/år)</td>
-        <td>Kontinuitet i leveranse og forutsigbar fremdrift i 24 måneder</td>
-      </tr>
-    </table>
     <li>Besøkende finner ikke frem til riktig rom, avdeling eller butikk.</li>
     <li>Trykt/manuell skilting blir raskt utdatert.</li>
     <li>Mangel på sanntidsinformasjon ved endringer (stengte soner, kø, arrangementer).</li>
@@ -154,6 +130,8 @@
   <ul>
     <li>Standard API-koblinger mot kalender/bookingsystem/køsystem.</li>
     <li>QR-kobling fra skjerm til mobilvisning av rute/innhold.</li>
+    <li>Velkomstskjerm med pushvarsel til ansatte når besøkende ankommer eller ber om kontakt.</li>
+    <li>Nettsidekobling for reklame/informasjonsflyt slik at oppdateringer på kundens nettside automatisk kan hentes inn og vises på skjerm.</li>
     <li>Utvidet analysemodul (visninger, interaksjoner, driftstid, alarmspor).</li>
     <li>Mer komplett offline-modus med robust synk ved nettverksbrudd.</li>
   </ul>
@@ -166,6 +144,14 @@
     <li><strong>Driftsrobusthet:</strong> defensive fallbacks (idle/playlist/screens) for å redusere risiko for blank skjerm.</li>
     <li><strong>Lav implementeringsfriksjon:</strong> statisk player + cloud backend gjør utrulling rask for pilotkunder.</li>
   </ul>
+
+  <h3>Produkttrapp for midtsegmentet</h3>
+  <table>
+    <tr><th>Nivå</th><th>Typisk behov</th><th>Leveranse</th><th>Oppgradering</th></tr>
+    <tr><td>Start</td><td>Kun én reklame-/infoskjerm</td><td>Enkel skjermpublisering og automatisk avspilling</td><td>Kan oppgraderes uten plattformbytte</td></tr>
+    <tr><td>Vekst</td><td>Flere skjermer og bedre publikumsflyt</td><td>Wayfinding-modul + velkomstskjerm</td><td>Pushvarsel til ansatt ved besøksbehov</td></tr>
+    <tr><td>Skala</td><td>Små og store lokasjoner med ulike behov</td><td>Multi-lokasjon, roller, integrasjoner og sentral drift</td><td>Trinnvis aktivering av flere moduler</td></tr>
+  </table>
 
   <h2>4. Målgruppe og marked</h2>
   <h3>Primære kundesegmenter</h3>
@@ -250,6 +236,14 @@
     <li><strong>Engangstjenester:</strong> kartproduksjon, onboarding, konfigurering og opplæring.</li>
   </ul>
 
+  <h3>Segmentstrategi og oppgraderingsløp</h3>
+  <ul>
+    <li>Kunder kan starte med én enkel reklameskjerm og lav månedspris.</li>
+    <li>Samme kunde kan senere oppgradere til wayfinding, velkomstskjerm og pushvarsel uten å bytte system.</li>
+    <li>Reklamemodulen planlegges koblet mot kundens nettside (feed/API) slik at markedsansvarlig kun trenger å oppdatere nettsiden.</li>
+    <li>Prismodellen holdes modulær slik at både små og store virksomheter kan velge riktig nivå.</li>
+  </ul>
+
   <h3>Engangsprising (indikativ)</h3>
   <table>
     <tr><th>Tjeneste</th><th>Prisintervall</th></tr>
@@ -312,12 +306,12 @@
     </tr>
     <tr>
       <td>6–12 mnd</td>
-      <td>Standardisert onboarding, bedre rapportering, tydeligere prispakker</td>
+      <td>Standardisert onboarding, bedre rapportering, tydeligere prispakker og første versjon av velkomstskjerm med pushvarsel</td>
       <td>2–4 betalende kunder, onboardingtid ned mot 1–2 uker</td>
     </tr>
     <tr>
       <td>12–24 mnd</td>
-      <td>1–2 standardintegrasjoner (f.eks. kalender/booking), enklere partnerleveranse</td>
+      <td>1–2 standardintegrasjoner (f.eks. kalender/booking) samt nettsidekobling for automatisk reklame-/informasjonsflyt</td>
       <td>6–10 kunder, 35–80 skjermer</td>
     </tr>
     <tr>
@@ -336,7 +330,7 @@
     <tr><td>25–36 mnd</td><td>2–4 kjernemedlemmer (produkt/utvikling, levering/support, salg)</td><td>Skalerbar drift med tydelig rollefordeling</td></tr>
   </table>
 
-  <h2>10. Finansielle prognoser (3 år, realistisk base case)</h2>
+  <h2>10. Finansielle prognoser og finansieringsgrunnlag</h2>
   <h3>Nøkkelforutsetninger</h3>
   <ul>
     <li>Grunnlegger er satt opp som fulltids lønnet fra nå med 500 000 kr/år, og dette er inkludert i kostnadsbildet.</li>
@@ -418,6 +412,32 @@
       <td>Høy personavhengighet i tidlig fase</td>
       <td>Leveranse stopper ved sykdom/kapasitetsmangel</td>
       <td>Dokumenterte rutiner, standard onboarding, gradvis oppbygging av ekstra leveranseressurs</td>
+    </tr>
+  </table>
+
+  <h2>12. Planlagt bruk av ekstern finansiering</h2>
+  <p>Ved tildeling av støtte eller lån brukes midlene til å redusere risiko i tidlig fase og dokumentere skalerbar drift før større kommersiell opptrapping.</p>
+  <table>
+    <tr><th>Område</th><th>Formål</th><th>Resultatmål</th></tr>
+    <tr>
+      <td>Produktstabilitet og sikkerhet</td>
+      <td>Herde plattform for flere samtidige lokasjoner og redusere driftsavvik</td>
+      <td>Stabil drift og dokumentert oppetid i pilot og neste kundecase</td>
+    </tr>
+    <tr>
+      <td>Kartproduksjon og implementeringsmetode</td>
+      <td>Standardisere leveranse av kart, hotspots og oppsett</td>
+      <td>Kortere onboardingtid og lavere leveransekost per ny lokasjon</td>
+    </tr>
+    <tr>
+      <td>Kommersialisering</td>
+      <td>Bygge salgsgrunnlag med referansecase, partnerdialog og tilbudsprosess</td>
+      <td>Konvertere pilot til betalende avtaler og etablere repeterbar salgsflyt</td>
+    </tr>
+    <tr>
+      <td>Gjennomføringsevne</td>
+      <td>Dekke grunnleggerlønn i oppbyggingsfase (500 000 kr/år)</td>
+      <td>Kontinuitet i leveranse og forutsigbar fremdrift i 24 måneder</td>
     </tr>
   </table>
 
