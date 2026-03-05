@@ -331,11 +331,11 @@ body.layout-ads-map-preview {
 }
 
 body.layout-ads-map-preview.ads-anim-subtle .ads-layer.show {
-  animation: ads-drift-left-subtle 8.2s ease-in-out infinite alternate;
+  animation: ads-drift-left-subtle 6.6s ease-in-out infinite alternate;
 }
 
 body.layout-ads-map-preview.ads-anim-wow .ads-layer.show {
-  animation: ads-drift-left-wow 7.5s cubic-bezier(0.45, 0.05, 0.25, 0.98) infinite alternate;
+  animation: ads-drift-left-wow 5.9s cubic-bezier(0.45, 0.05, 0.25, 0.98) infinite alternate;
 }
 
 body.layout-ads-map-preview .ads-layer {
@@ -353,7 +353,7 @@ body.layout-ads-map-preview .ads-layer {
 body.layout-ads-map-preview .ads-layer img,
 body.layout-ads-map-preview .ads-layer video {
   object-fit: contain;
-  background: rgba(2, 6, 23, 0.72);
+  background: #000;
 }
 
 body.layout-ads-map-preview.ads-anim-subtle .ads-layer.ads-exit-left {
@@ -366,12 +366,12 @@ body.layout-ads-map-preview.ads-anim-wow .ads-layer.ads-exit-left {
 
 @keyframes ads-drift-left-subtle {
   from { transform: translateX(0) scale(1.001); filter: saturate(1); }
-  to { transform: translateX(-1.3%) scale(1.004); filter: saturate(1.02); }
+  to { transform: translateX(-2.1%) scale(1.004); filter: saturate(1.02); }
 }
 
 @keyframes ads-drift-left-wow {
   from { transform: translateX(0) scale(1.001); filter: saturate(1); }
-  to { transform: translateX(-2.4%) scale(1.009); filter: saturate(1.05); }
+  to { transform: translateX(-3.4%) scale(1.009); filter: saturate(1.05); }
 }
 
 @keyframes ads-leave-left-subtle {
