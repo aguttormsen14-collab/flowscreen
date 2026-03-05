@@ -12,6 +12,7 @@ html, body {
   --player-main-bottom: 0px;
   --player-weather-size: 0px;
   --player-preview-size: 0px;
+  --interactive-right-fade: clamp(22px, 2.2vw, 42px);
 }
 
 body.layout-default {
@@ -349,6 +350,18 @@ body.layout-ads-map-preview .ads-layer {
   border: none;
   box-shadow: none;
   will-change: transform, opacity, filter;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) calc(100% - var(--interactive-right-fade)),
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) calc(100% - var(--interactive-right-fade)),
+    rgba(0, 0, 0, 0) 100%
+  );
 }
 
 body.layout-ads-map-preview .ads-layer img,
@@ -367,12 +380,12 @@ body.layout-ads-map-preview.ads-anim-wow .ads-layer.ads-exit-left {
 
 @keyframes ads-drift-left-subtle {
   from { transform: translateX(0) scale(1.001); filter: saturate(1); }
-  to { transform: translateX(-2.1%) scale(1.004); filter: saturate(1.02); }
+  to { transform: translateX(-9%) scale(1.004); filter: saturate(1.02); }
 }
 
 @keyframes ads-drift-left-wow {
   from { transform: translateX(0) scale(1.001); filter: saturate(1); }
-  to { transform: translateX(-3.4%) scale(1.009); filter: saturate(1.05); }
+  to { transform: translateX(-10%) scale(1.009); filter: saturate(1.05); }
 }
 
 @keyframes ads-leave-left-subtle {

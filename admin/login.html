@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Login</title>
+  <title>FlowScreen Admin Login</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b4f8a'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-size='34' fill='white' font-family='Arial,sans-serif'%3ES%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="login.css?v=201">
+  <link rel="stylesheet" href="login.css?v=202">
 </head>
 
 <body data-theme="saxvik-clean">
@@ -15,9 +15,9 @@
     <div class="card">
 
       <div class="header">
-        <img id="sxLogo" src="" alt="Saxvik Hub" class="logo-header">
+        <img id="sxLogo" src="" alt="FlowScreen" class="logo-header">
         <div class="hgroup">
-          <h1>Saxvik Admin</h1>
+          <h1>FlowScreen Admin</h1>
           <p>Wayfinding kontrollpanel</p>
         </div>
       </div>
@@ -43,7 +43,7 @@
       </div>
 
       <div class="footer">
-        <span>Saxvik Kontorsenter</span>
+        <span>FlowScreen Platform</span>
         <span>Admin</span>
       </div>
 
@@ -84,7 +84,7 @@
       const img = document.getElementById("sxLogo");
       if (img) {
         // Use relative path from admin/ folder
-        const logoPath = `../installs/${INSTALL_ID}/assets/brand/saxvik-hub/Current/saxvik-hub-logo.png`;
+        const logoPath = `../installs/${INSTALL_ID}/assets/brand/saxvik-hub/Current/flowscreen-primary-logo.png`;
         img.src = logoPath;
         console.log('[LOGIN] Logo path:', logoPath);
       }

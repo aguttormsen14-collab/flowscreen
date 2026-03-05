@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Saxvik Admin Dashboard</title>
+  <title>FlowScreen Admin Dashboard</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b4f8a'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-size='34' fill='white' font-family='Arial,sans-serif'%3ES%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="dashboard.css?v=217" />
+  <link rel="stylesheet" href="dashboard.css?v=218" />
 </head>
 
 <body>
@@ -14,9 +14,9 @@
     <!-- TOPBAR -->
     <header class="topbar">
       <div class="topbar-brand">
-        <img id="sxLogoSmall" src="" alt="Saxvik" class="topbar-logo" />
+        <img id="sxLogoSmall" src="" alt="FlowScreen" class="topbar-logo" />
         <div class="topbar-title">
-          <h1>Saxvik Hub</h1>
+          <h1>FlowScreen</h1>
           <span class="topbar-subtitle">Administrasjon</span>
         </div>
       </div>
@@ -29,7 +29,7 @@
     <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-logo">
-        <img id="sxLogo" src="" alt="Saxvik Hub" class="logo" />
+        <img id="sxLogo" src="" alt="FlowScreen" class="logo" />
       </div>
       <nav class="sidebar-nav">
         <a href="#" class="nav-item active" data-dashboard-module="dashboard" data-module-title="Oversikt">
@@ -459,11 +459,12 @@
     
     // Load logos
     document.addEventListener("DOMContentLoaded", () => {
-      const logoPath = `installs/${INSTALL_ID}/assets/brand/saxvik-hub/Current/saxvik-hub-logo.png`;
+      const logoMainPath = `installs/${INSTALL_ID}/assets/brand/saxvik-hub/Current/flowscreen-primary-logo.png`;
+      const logoSmallPath = `installs/${INSTALL_ID}/assets/brand/saxvik-hub/Current/flowscreen-small-icon.png`;
       const logoMain = document.getElementById("sxLogo");
       const logoSmall = document.getElementById("sxLogoSmall");
-      if (logoMain) logoMain.src = asset(logoPath);
-      if (logoSmall) logoSmall.src = asset(logoPath);
+      if (logoMain) logoMain.src = asset(logoMainPath);
+      if (logoSmall) logoSmall.src = asset(logoSmallPath);
     });
   </script>
 

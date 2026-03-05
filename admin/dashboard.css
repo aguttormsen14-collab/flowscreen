@@ -162,10 +162,10 @@ body {
 }
 
 .sidebar-logo .logo {
-  width: 120px;
+  width: 148px;
   height: auto;
   object-fit: contain;
-  filter: brightness(0) invert(1);
+  filter: none;
 }
 
 .sidebar-nav {
